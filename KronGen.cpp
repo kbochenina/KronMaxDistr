@@ -4,7 +4,7 @@
 #include "InOut.h"
 #include "Stat.h"
 
-ofstream TFile;
+//ofstream TFile;
 
 void CheckParams(const TStr& model_gen, const TStr& model_plt)
 {
@@ -279,6 +279,9 @@ void GenKron(const TStr& Args, TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV&
 	KronDegAvgOut.Sort();
 	TFile << "Average time of generation of Kronecker product: " <<  Sec << endl;
 }
+
+
+    
 
 void GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt)
 {

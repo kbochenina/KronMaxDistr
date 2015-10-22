@@ -6,3 +6,9 @@ void PrintMtx(const TKronMtx& FitMtxM, ofstream& TFile);
 void ReadPNGraphFromFile(const TStr args, PNGraph& G);
 ofstream OpenFile(const TStr& fileName);
 void ReadMtx(const TStr& Mtx, const TInt& MtxSize, TKronMtx& FitMtx);
+// print the vector of TStr
+void PrintTStrV(const vector<TStr>& CommandLineArgs);
+// print the vector of TFltPr
+void PrintTFltPrV(const TFltPrV& V);
+// Res is a string where Pref is added before Sep in string S
+void AddPrefix(const char* Pref, const char * Sep, const char* S, TStr& Res);

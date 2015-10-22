@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "GenPy.h"
+#include <string>
 
 
 inline TStrV createTStrV(TStr s)
@@ -23,6 +24,25 @@ public:
 // [funcName] -> argPrefixes, argTypes, required arguments count, default values
 map<TStr, tuple<TStrV,TStrV, int, TStrV>,cmp_str> funcInfo;
 
+int FindSeedIndex(const TStrV& Vec){
+    for (size_t i = 0; i < Vec.Len(); i++){
+        if (Vec[i] == "seed")
+            return i;
+    }
+    return -1;
+}
+
+void ReplaceOnRandomSeed(map<TStr, tuple<TStrV,TStrV, int, TStrV>,cmp_str>& funcInfo){
+    for (auto it = funcInfo.begin(); it != funcInfo.end(); ++it){
+        int SeedIndex = FindSeedIndex(get<0>(it->second));
+        if (SeedIndex != -1){
+            int r = rand();
+            TStr sr(to_string(r).c_str());
+            get<3>(it->second)[SeedIndex] = sr;
+        }
+    }
+}
+
 void AddFuncInfo()
 {
 	funcInfo.clear();
@@ -34,6 +54,7 @@ void AddFuncInfo()
 	funcInfo["powerlaw_cluster_graph"] = make_tuple(createTStrV("n m p seed"), createTStrV("int int double int"), 3, createTStrV("1024 3 0.2 0"));
 	funcInfo["random_lobster"] = make_tuple(createTStrV("n p1 p2 seed"), createTStrV("int double double int"), 3, createTStrV("1024 0.1 0.1 0"));
 	funcInfo["path_graph"] = make_tuple(createTStrV("n"), createTStrV("int"), 1, createTStrV("1024"));
+   ReplaceOnRandomSeed(funcInfo);
 	//funcInfo["grid_2d_graph"] = make_tuple(createTStrV("n m"), createTStrV("int int"), 2, createTStrV("1024 1024"));
 	//funcInfo["grid_graph"] = make_tuple(createTStrV("n"), createTStrV("int"), 1, createTStrV("1024"));
 }
@@ -67,10 +88,11 @@ void PyInit(const TStr& PySettings)
 		std::string s;
 		std::getline(f, s);
 		Py_Initialize(); // инициализация интерпретатора  */
-		AddPath(s);
+      AddPath(s);
 		AddPath(s+"\\\\networkx\\\\generators");
 		AddPath(s+"\\\\networkx\\\\readwrite");
 		AddPath(s+"\\\\networkx\\\\classes");
+      //srand((unsigned)time(NULL));
 	}
 	return;		
 	IAssert(1);

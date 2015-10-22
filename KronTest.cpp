@@ -4,6 +4,9 @@
 #include "stdafx.h"
 #include "InOut.h"
 #include "KronGen.h"
+#include "MaxDegGen.h"
+
+ofstream TFile;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -13,8 +16,9 @@ int _tmain(int argc, _TCHAR* argv[])
     std::vector<TStr> commandLineArgs;
     // read command line arguments for all generators
     ReadParameters(SettingsFNm, commandLineArgs);
-    KroneckerBySample(commandLineArgs);
-       
+    //KroneckerBySample(commandLineArgs);
+    MaxDegGen(commandLineArgs); 
+    system("pause");
     return 0;
 }
 

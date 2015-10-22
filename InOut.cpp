@@ -134,3 +134,36 @@ void ReadMtx(const TStr& Mtx, const TInt& MtxSize, TKronMtx& FitMtx){
     FitMtx.GenMtx(matrix.Len() / MtxSize);
     FitMtx.SetMtx(matrix);
 }
+
+// print the vector of TStr
+void PrintTStrV(const vector<TStr>& CommandLineArgs){
+    for (const TStr& s : CommandLineArgs)
+        cout << s.CStr() << endl;
+}
+
+// print the vector of TFltPr
+void PrintTFltPrV(const TFltPrV& V){
+    for (size_t i = 0; i < V.Len(); ++i)
+        cout << "(" << V[i].GetVal1() << ", " << V[i].GetVal2() << ")" << " ";
+    cout << endl;
+}
+
+// Res is a string where Pref is added before Sep in string S
+void AddPrefix(const char* Pref, const char * Sep, const char* S, TStr& Res){
+    const int MaxSize = 100;
+    if (strlen(S) > MaxSize || strlen(Pref) > MaxSize){
+        cout << "AddPrefix() warning. String is too large. Prefix will not be added";
+        Res = S;
+    }
+
+    const char* pch;
+    pch = strstr (S, Sep);
+    if (pch == nullptr)
+        Res = S;
+    char Begin[MaxSize], End[MaxSize];
+    strncpy(Begin, S, pch - S);
+    strncpy(End, pch, strlen(S) - strlen(Begin));
+    Res = Begin;
+    Res += Pref;
+    Res += End;
+}

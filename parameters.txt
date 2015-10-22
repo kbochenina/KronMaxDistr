@@ -1,0 +1,10 @@
+KRONTEST
+-gen:model+kron -plttype:model+kron -plt:all
+GRAPHGEN
+-g:genpy -module:random_graphs -func:barabasi_albert_graph -n:512 -m:3
+MTXGEN
+-m:create -rs:2 
+KRONFIT
+-m:r -o:fitmtxmodel.txt -gi:50 -w:10000 -s:100000 -p:d -nsp:1 -n0:2
+KRONGEN
+-i:9 -n:1 -isdir:false -sf:2

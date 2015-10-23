@@ -216,7 +216,7 @@ void GetModel(const TStr& Args, PNGraph& G){
 		GenPy(GU, TFile, Args);	
 		G = TSnap::ConvertGraph<PNGraph>(GU);
 	}
-	TFile << "Time of getting model: " <<  execTime.GetTmStr() << endl;
+	//TFile << "Time of getting model: " <<  execTime.GetTmStr() << endl;
 	/*TFile << "Model graph: " << G->GetNodes() << " nodes, " << G->GetEdges() << " edges\n";
 	TIntV DegV;
 	TSnap::GetDegSeqV(G, DegV);

@@ -18,7 +18,6 @@ int _tmain(int argc, _TCHAR* argv[])
     ReadParameters(SettingsFNm, commandLineArgs);
     //KroneckerBySample(commandLineArgs);
     MaxDegGen(commandLineArgs); 
-    system("pause");
     return 0;
 }
 

@@ -285,7 +285,7 @@ int GenPy(PUNGraph &res, ofstream& TFile, const TStr& parameters)
 		exit(1);
 	};
 	
-	TFile << "Time of generation of graph by NetworkX: " << execTime.GetTmStr() << endl; 
+	//TFile << "Time of generation of graph by NetworkX: " << execTime.GetTmStr() << endl; 
 
 	execTime.Tick();
 	PyObject*** nodes = new PyObject**[1];
@@ -312,7 +312,7 @@ int GenPy(PUNGraph &res, ofstream& TFile, const TStr& parameters)
 		v2 = PyLong_AsLong(node);
 		res->AddEdge(v1,v2);
 	}
-	TFile << "Time of copying of graph from NetworkX representation: " << execTime.GetTmStr() << endl; 
+	//TFile << "Time of copying of graph from NetworkX representation: " << execTime.GetTmStr() << endl; 
 	Py_DECREF(G);
 	Py_DECREF(edges);
 	//Py_Finalize(); // очищение памяти, отданной интерпретатору

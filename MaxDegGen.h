@@ -2,6 +2,7 @@
 #include "InOut.h"
 #include "GenPy.h"
 #include "KronGen.h"
+#include "Scale.h"
 #include <iomanip>
 #include <ctime>
 

@@ -43,6 +43,7 @@ void MaxDegGen( const vector<TStr>& CommandLineArgs )
         TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
         const TInt NIter = Env.GetIfArgPrefixInt("-i:", 10, "Iterations of Kronecker product");
         const TInt SF = Env.GetIfArgPrefixInt("-sf:", 1, "sf - 1 is how many times the number of iterations will increase");
+        const TStr ScaleMtx = Env.GetIfArgPrefixStr("-scalemtx:", "true", "Scale initiator matrix to fit for maximum degree");
 
         TStr InFName, OutFName;
         AddPrefix("_in", ".", MaxDegFile.CStr(), InFName);
@@ -71,17 +72,35 @@ void MaxDegGen( const vector<TStr>& CommandLineArgs )
             GetModel(CommandLineArgs[GRAPHGEN], G);
             MaxDegModelIn.push_back(GetMaxDeg(G,true));
             MaxDegModelOut.push_back(GetMaxDeg(G,false));
+            TFile << "Model edges: " << G->GetEdges() << endl;
+
 
             // estimate initiator matrix for the first sample
             if (i == 0){
                 if (!GetMtx(CommandLineArgs[MTXGEN], FitMtx))
                     GenNewMtx(G, CommandLineArgs[KRONFIT], FitMtx);
-                FitMtx.Dump(StatFile);
+
+                TFile << "Initiator matrix before scaling for nodes and edges: " << endl;
+                FitMtx.Dump(TFile);
+
+                FitMtx.SetForEdgesNoCut(G->GetNodes(), G->GetEdges());
+
+                TFile << "Initiator matrix after scaling for nodes and edges: " << endl;
+                FitMtx.Dump(TFile);
+
+                if (ScaleMtx == "true"){
+                    ScaleFitMtx(FitMtx, NIter, G->GetNodes(), GetMaxDeg(G,false), IsDir);
+                    TFile << "Initiator matrix after scaling for maximum degree: " << endl;
+                    FitMtx.Dump(TFile);
+                }
             }
 
             for (int i = 0; i < SF; ++i){
                 // matrix here is without any scaling
                 PNGraph Kron = TKronMtx::GenFastKronecker(FitMtx, NIter+i, Dir, rand());
+                int KronSize = pow(2.00, NIter+i);
+                TFile << "Kron size: " << KronSize;
+                TFile << " Kron edges: " << Kron->GetEdges() << endl;
 
                 MaxDegKronIn[i].push_back(GetMaxDeg(Kron, true));
                 MaxDegKronOut[i].push_back(GetMaxDeg(Kron, false));

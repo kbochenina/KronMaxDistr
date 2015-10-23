@@ -23,3 +23,4 @@ void MaxDegGen(const vector<TStr>& CommandLineArgs);
 int GetMaxDeg(const PNGraph& G, bool IsIn);
 void WriteHeader(ofstream& Out, const TStr& GraphGenPars, const int& N, const int& NIter, const int& SF, bool IsIn);
 void WriteMaxDegSeq(ofstream& Out, const char* Name, const int& Size, const vector<int>& Deg);
+void ReadGevParams(ifstream& Gev, double& Shape, double& Location, double& Scale);

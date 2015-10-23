@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "stdlib.h"
 #include "MaxDegGen.h"
 
 int GetMaxDeg(const PNGraph& G, bool IsIn){
@@ -38,6 +39,8 @@ void MaxDegGen( const vector<TStr>& CommandLineArgs )
         // output filename
         const TStr MaxDegFile = Env.GetIfArgPrefixStr("-fn:", "maxdeg.tab", "Name of output file with statistics");
         const TInt N = Env.GetIfArgPrefixInt("-n:", 1, "Number of samples to generate");
+        const TStr RPath = Env.GetIfArgPrefixStr("-rpath:", "", "Full path to *.r file (including name)");
+        const TStr ROut = Env.GetIfArgPrefixStr("-rout:", "gevfit.dat", "Name of R output file");
 
         Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
         TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
@@ -51,6 +54,8 @@ void MaxDegGen( const vector<TStr>& CommandLineArgs )
 
         ofstream OutIn(InFName.CStr());
         ofstream OutOut(OutFName.CStr());
+        ifstream Gev(ROut.CStr());
+
         bool Dir = IsDir == "true" ? true : false;
         TKronMtx FitMtx;
         vector<int> MaxDegModelIn, MaxDegModelOut;
@@ -121,8 +126,27 @@ void MaxDegGen( const vector<TStr>& CommandLineArgs )
 
         Py_Finalize();
 
+        // print MaxDegModelIn and MaxDegModelOut to *.dat file to use it in R
+        ofstream OutR("MaxDegModel.dat");
+        PrintIntV(MaxDegModelIn, OutR);
+        PrintIntV(MaxDegModelOut, OutR);
+        OutR.close();
+        
+        // execute R script to fit GEV parameters
+        // full path to MaxModel.dat could be specified in *.r file
+        TStr RCmd = "R CMD BATCH " + RPath;
+        system(RCmd.CStr());
+        cout << "R script finished..." << endl;
+
+        double Scale = 0, Location = 0, Shape = 0;
+
+        ReadGevParams(Gev, Shape, Location, Scale);
+        OutIn << "Shape = " << Shape << " Location = " << Location << " Scale = " << Scale << endl;
+        OutOut << "Shape = " << Shape << " Location = " << Location << " Scale = " << Scale << endl;
+
         OutIn.close();
         OutOut.close();
+        Gev.close();
     Catch
 }
 
@@ -155,4 +179,18 @@ void WriteMaxDegSeq(ofstream& Out, const char* Name, const int& Size, const vect
         Out << d << " ";
     Out << endl;
     Out << endl;
+}
+
+void ReadGevParams(ifstream& Gev, double& Shape, double& Location, double& Scale){
+    string s;
+    do {
+        Gev >> s;
+    }
+    while (s.find("beta") == string::npos);
+    Gev >> s;
+    Shape = stod(s);
+    Gev >> s;
+    Location = stod(s);
+    Gev >> s;
+    Scale = stod(s);
 }

@@ -12,3 +12,5 @@ void PrintTStrV(const vector<TStr>& CommandLineArgs);
 void PrintTFltPrV(const TFltPrV& V);
 // Res is a string where Pref is added before Sep in string S
 void AddPrefix(const char* Pref, const char * Sep, const char* S, TStr& Res);
+// print vector of int to file
+void PrintIntV(const vector<int>& V, ofstream& Out);

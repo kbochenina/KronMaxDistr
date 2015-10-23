@@ -148,6 +148,13 @@ void PrintTFltPrV(const TFltPrV& V){
     cout << endl;
 }
 
+// print vector of int to file
+void PrintIntV(const vector<int>& V, ofstream& Out){
+    for (size_t i = 0; i < V.size(); ++i)
+        Out << V[i] << " ";
+    Out << endl;
+}
+
 // Res is a string where Pref is added before Sep in string S
 void AddPrefix(const char* Pref, const char * Sep, const char* S, TStr& Res){
     const int MaxSize = 100;

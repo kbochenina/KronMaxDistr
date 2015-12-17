@@ -171,6 +171,11 @@ void TKronMtx::Normalize()
 	//	printf("Error while normalizing\n");
 }
 
+double GetLaplas(const double p, const double k, const int n){
+    double q = 1-p;
+    return (1 / (sqrt(n * p * q) * sqrt(2 * M_PI)) * exp(-0.5 * pow((k - n * p) / (sqrt(n * p * q)), 2.00)) );
+}
+
 double TKronMtx::GetMaxExpectedDeg(const int& NIter, const TStr& IsDir, bool IsIn, int& BestRow, int& BestCol) const{
 	const double A = At(0,0), B = At(0,1), C = At(1,0), D = At(1,1);
 	if (IsDir == "true"){
@@ -189,6 +194,26 @@ double TKronMtx::GetMaxExpectedDeg(const int& NIter, const TStr& IsDir, bool IsI
 			Sum1 = (pow(A + B, NIter) + pow(B + D, NIter))/2.00,
 			Sum2 = (pow(C + D, NIter) + pow(C + A, NIter))/2.00,
 			Sum3 = (pow(C + D, NIter) + pow(D + B, NIter))/2.00;
+
+      //const int n = static_cast<int>(pow(A + B + C + D, NIter));
+      //cout << "n = " << n << endl;
+      //double p = Sum0 * 2 / n;
+      //cout << "p = " << p << endl;
+      //double DivSum0 = n/2 * GetLaplas(p, 2, n/2);
+      //p = Sum1 * 2 / n;
+      //double DivSum1 = n/2 * GetLaplas(p, 2, n/2);
+      //p = Sum2 * 2 / n;
+      //double DivSum2 = n/2 * GetLaplas(p, 2, n/2);
+      //p = Sum3 * 2 / n;
+      //double DivSum3 = n/2 * GetLaplas(p, 2, n/2);
+      //cout << "Sum0: " << Sum0 << " Sum1: " << Sum1 << " Sum2: " << Sum2 << " Sum3: " << Sum3 << endl;
+      //cout << "DivSum0: " << DivSum0 << " DivSum1: " << DivSum1 << " DivSum2: " << DivSum2 << " DivSum3: " << DivSum3 << endl;
+      //Sum0 -= DivSum0; Sum1 -= DivSum1; Sum2 -= DivSum2; Sum3 -= DivSum3;
+      //cout << "Sum0: " << Sum0 << " Sum1: " << Sum1 << " Sum2: " << Sum2 << " Sum3: " << Sum3 << endl;
+     /* double Sum0 = pow((2 * A + B + C) / 2.00, NIter),
+			Sum1 = pow((2 * B + A + D) / 2.00, NIter),
+			Sum2 = pow((2 * C + A + D) / 2.00, NIter),
+			Sum3 = pow((2 * D + C + B) / 2.00, NIter);*/
 
 		double MaxSum = 0;	
 		if (Sum0 > Sum1 && Sum0 > Sum2 && Sum0 > Sum3) {MaxSum = Sum0; BestRow = 0; BestCol = 0;}
@@ -468,10 +493,12 @@ bool TKronMtx::CanScaleToDeg(int Deg, TInt NIter){
 void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TStr& IsDir, bool IsIn)
 {
 	double MaxDeg = MaxDegReq;
+   //printf("MaxDegReq:  %d\n", MaxDegReq);
 	if (MaxDeg <= 0)
 		Error("SetForMaxDeg", "MaxDeg <= 0");
 	TStr ErrorMsg;
-	if (!CheckMtx(ErrorMsg)) Error("SetForMaxDeg", ErrorMsg);
+	if (!CheckMtx(ErrorMsg)) 
+       Error("SetForMaxDeg", ErrorMsg);
 		
 	TKronMtx ScaledMtx(*this);
 	
@@ -505,7 +532,7 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 		Diag2V = At(Diag2.Val1, Diag2.Val2),
 		LeastV = At(Least.Val1, Least.Val2);
 
-	this->Dump();
+	//this->Dump();
 	//printf("Matrix sum: %f\n", ScaledMtx.GetSum());
 
 	bool DecFound = false;
@@ -624,7 +651,8 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 	LeastV = ScaledMtx.At(Least.Val1, Least.Val2);
 	
 
-	if (!ScaledMtx.CheckMtx(ErrorMsg)) Error("SetForMaxDeg", ErrorMsg);
+	if (!ScaledMtx.CheckMtx(ErrorMsg)) 
+       Error("SetForMaxDeg", ErrorMsg);
 	
 	At(Corner.Val1,Corner.Val2) = CornerV; At(Diag1.Val1, Diag1.Val2) = Diag1V; 
 	At(Diag2.Val1,Diag2.Val2) = Diag2V; At(Least.Val1, Least.Val2) = LeastV; 
@@ -1459,7 +1487,6 @@ void TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const in
 		int NbOutId = NI.GetNbrNId(NbId);
 		if (rnd.GetUniDev() > (out->GetNI(NbOutId).GetInDeg() - MinDeg) / 99.0 || out->GetNI(NbOutId).GetInDeg() == 99 ) 
 		{i--; continue;}
-
 		out->DelEdge(nodeId, NbOutId, false);
 	}
 	*/
@@ -1580,7 +1607,6 @@ double TKronMtx::GetNoisedProbV(const TKronMtx& SeedMtx, const int& NIter, TVec<
 				RequiredDeg = MinPossibleDeg;
 			NewMtx.SetForMaxDeg(RequiredDeg , 1); 
 			CurrentDeg = RequiredDeg;
-
 		}
 		AccumReal *= CurrentDeg;
 		AccumExpected *= Step;*/
@@ -1681,7 +1707,7 @@ void TKronMtx::GenFastKronecker(PNGraph &Graph, const TKronMtx& SeedMtx, const i
   const int NNodes = SeedGraph.GetNodes(NIter);
   const int NEdges = Edges;
 
-  printf("  RMat Kronecker: %d nodes, %d edges, %s...\n", NNodes, NEdges, IsDir ? "Directed":"UnDirected");
+  //printf("  RMat Kronecker: %d nodes, %d edges, %s...\n", NNodes, NEdges, IsDir ? "Directed":"UnDirected");
   Graph = TNGraph::New(NNodes, -1);
   TRnd Rnd(Seed);
   TExeTm ExeTm;
@@ -1723,7 +1749,7 @@ void TKronMtx::GenFastKronecker(PNGraph &Graph, const TKronMtx& SeedMtx, const i
     //if (edges % 1000 == 0) printf("\r...%dk", edges/1000);
   }
   //printf("             %d edges [%s]\n", Graph->GetEdges(), ExeTm.GetTmStr());
-  printf("             collisions: %d (%.4f)\n", Collision, Collision/(double)Graph->GetEdges());
+  //printf("             collisions: %d (%.4f)\n", Collision, Collision/(double)Graph->GetEdges());
 }
 
 PNGraph TKronMtx::GenFastKronecker(const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const int& Seed){
@@ -3623,7 +3649,6 @@ void TKronMaxLL::SetPerm(const char& PermId) {
   KronLL.SampleGradient(WarmUp, NSamples, AvgLL, GradV);
   FEvalH.AddDat(ProbMtx, TFEval(AvgLL, GradV));
 }
-
 double TKronMaxLL::GetLL(const TFltV& ThetaV) {
   TKronMtx ProbMtx;  RoundTheta(ThetaV, ProbMtx);
   if (! FEvalH.IsKey(ProbMtx)) {
@@ -3631,7 +3656,6 @@ double TKronMaxLL::GetLL(const TFltV& ThetaV) {
   }
   return FEvalH.GetDat(ProbMtx).LogLike;
 }
-
 void TKronMaxLL::GetDLL(const TFltV& ThetaV, TFltV& GradV) {
   TKronMtx ProbMtx;  RoundTheta(ThetaV, ProbMtx);
   if (! FEvalH.IsKey(ProbMtx)) {
@@ -3639,7 +3663,6 @@ void TKronMaxLL::GetDLL(const TFltV& ThetaV, TFltV& GradV) {
   }
   GradV = FEvalH.GetDat(ProbMtx).GradV;
 }
-
 double TKronMaxLL::GetDLL(const TFltV& ThetaV, const int& ParamId) {
   TKronMtx ProbMtx;  RoundTheta(ThetaV, ProbMtx);
   if (! FEvalH.IsKey(ProbMtx)) {
@@ -3703,7 +3726,6 @@ void TKronPhasePlot::SaveMatlab(const TStr& OutFNm) const {
   }
   fclose(F);
 }
-
 void TKronPhasePlot::KroneckerPhase(const TStr& MtxId, const int& MxIter,
  const double& MnAlpha, const double& MxAlpha, const double& AlphaStep,
  const double& MnBeta, const double& MxBeta, const double& BetaStep,
@@ -3847,7 +3869,6 @@ void TKroneckerLL::TestLL() {
   /*PKronecker KronParam = TKronMtx::GetMtx("0.9 0.7; 0.9 0.5");
   PNGraph Graph = TKronMtx::GenFastKronecker(KronParam, 6, true, 2);
   TGAlg::SaveFullMtx(Graph, "kron32.tab");
-
   TKroneckerLL KronLL(Graph, KronParam);
   KronLL.SetOrderPerm();
   KronLL.LogLike = KronLL.CalcApxGraphLL();
@@ -3973,12 +3994,10 @@ void TKroneckerLL::TestLL() {
     printf("  %d]  mean: %16f    sDev: %16f\n", m, AvgGradV[m], SDevV[m]);
   }
 }
-
 void TKronMaxLL::TFunc::FDeriv(const TFltV& Point, TFltV& GradV) {
   CallBack->GetDLL(Point, GradV);
   for (int i = 0; i < GradV.Len(); i++) { GradV[i] = -GradV[i]; }
 }
-
 double TKronMaxLL::TLogBarFunc::FVal(const TFltV& Point) {
   // log-likelihood
   const double LogLL = CallBack->GetLL(Point);
@@ -3996,7 +4015,6 @@ double TKronMaxLL::TLogBarFunc::FVal(const TFltV& Point) {
   printf("barrrier: %f\n", Barrier);
   return -LogLL + Barrier; // minus LL since we want to maximize it
 }
-
 void TKronMaxLL::TLogBarFunc::FDeriv(const TFltV& Point, TFltV& DerivV) {
   // derivative of log-likelihood
   CallBack->GetDLL(Point, DerivV);

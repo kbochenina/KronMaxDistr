@@ -7,9 +7,12 @@
 
 #include <string>
 
-const int NFUNC = 6;
-const std::string FUNCNAMES[] = {"KRONTEST", "GRAPHGEN", "MTXGEN", "KRONFIT", "KRONGEN", "MAXDEGGEN"};
-const enum ARGS { KRONTEST = 0, GRAPHGEN = 1, MTXGEN = 2, KRONFIT = 3, KRONGEN = 4, MAXDEGGEN = 5, PTYPE = 5, PLT = 6, NAME = 7};
+const int NFUNC = 7;
+//const std::string FUNCNAMES[] = {"KRONTEST", "GRAPHGEN", "MTXGEN", "KRONFIT", "KRONGEN", "MAXDEGGEN", "TESTGRAPH"};
+//const enum ARGS { KRONTEST = 0, GRAPHGEN = 1, MTXGEN = 2, KRONFIT = 3, KRONGEN = 4, MAXDEGGEN = 5, TESTGRAPH = 6, PTYPE = 7, PLT = 8, NAME = 9};
+
+const std::string FUNCNAMES[] = {"KRONTEST", "GRAPHGEN", "MTXGEN", "KRONFIT", "KRONGEN", "MAXDEGGEN", "TESTGRAPH"};
+const enum ARGS { KRONTEST = 0, GRAPHGEN = 1, MTXGEN = 2, KRONFIT = 3, KRONGEN = 4, MAXDEGGEN = 5, PTYPE = 7, PLT = 8, NAME = 9, TESTGRAPH = 10};
 
 #include "targetver.h"
 

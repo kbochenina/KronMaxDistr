@@ -111,6 +111,7 @@ void ReadPNGraphFromFile(const TStr args, PNGraph& G){
     Catch
 }
 
+
 ofstream OpenFile(const TStr& fileName)
 {
     Try

@@ -130,7 +130,7 @@ int CallPyFunction(const char *moduleName, const char *funcName, const TStrV& ar
 	TExeTm execTime;
 	// import module
 	pModule = PyImport_Import(pName);
-	cout << "Time of importing module " << moduleName << ": " << execTime.GetTmStr() << endl;
+	//cout << "Time of importing module " << moduleName << ": " << execTime.GetTmStr() << endl;
 	// we don't need pName anymore
 	Py_DECREF(pName);
 	// if module was loaded 
@@ -262,7 +262,7 @@ int ParseArgs(const char* funcname, const TStr& parameters, TStrV& args, TStrV& 
 
 int GenPy(PUNGraph &res, ofstream& TFile, const TStr& parameters)
 {
-	Env = TEnv(parameters, TNotify::StdNotify);
+	Env = TEnv(parameters, TNotify::NullNotify);
 	TStr mN = Env.GetIfArgPrefixStr("-module:", "random_graphs", "Module name");
 	TStr fN = Env.GetIfArgPrefixStr("-func:", "fast_gnp_random_graph", "Function name");
 	

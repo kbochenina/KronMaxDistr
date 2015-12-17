@@ -105,7 +105,7 @@ int BasicGraphGen(const TStr args, PNGraph &GD){
 }
 
 
-int InitKronecker(const TStr args, PNGraph &GD, TKronMtx& FitMtx){
+int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx){
 	Env = TEnv(args, TNotify::StdNotify);
 	Env.PrepArgs(TStr::Fmt("Kronecker graphs. build: %s, %s. Time: %s", __TIME__, __DATE__, TExeTm::GetCurTm()));
 	TExeTm ExeTm;
@@ -175,12 +175,27 @@ void GenRandomMtx(const int& MtxRndSize, TKronMtx& FitMtx){
     FitMtx.SetRndMtx(MtxRndSize);
 }
 
-void GenNewMtx(PNGraph& model, const TStr& args, TKronMtx& FitMtx){
+void GenNewMtx(const PNGraph& model, const TStr& args, TKronMtx& FitMtx){
     TExeTm execTime;
     InitKronecker(args, model, FitMtx);
     TFile << "Time of creation of init matrix: " <<  execTime.GetTmStr() << endl;
 }
 
+
+int GetNIter( const int Size )
+{
+	if (Size <= 1)
+	{
+		cout << "KronGen. GetNIter() error, wrong size: " << Size << endl;
+		return -1;
+	}
+	double Frac = log(static_cast<double>(Size)) / log (2.0);
+	int IntPart = floor(Frac);
+	if (Frac - IntPart <= 0.5)
+		return IntPart;
+	else 
+		return IntPart + 1;
+}
 
 // read or get random mtx
 bool GetMtx(const TStr& MtxArgs, TKronMtx& FitMtxModel){

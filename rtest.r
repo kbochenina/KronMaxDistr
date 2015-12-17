@@ -5,7 +5,7 @@ require(fExtremes)
 # head(x)
 x <- scan("D:\\ITMO\\Graphs\\ExtrVal\\KronTest\\MaxDegModel.dat", what = integer())
 # Fit GEV Data by Probability Weighted Moments:
-fit = gevFit(x, type = "pwm")
+fit = gevFit(x, type = "mle")
 sink("D:\\ITMO\\Graphs\\ExtrVal\\KronTest\\gevfit.dat")
 cat(summary(fit))
 sink()

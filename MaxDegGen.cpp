@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "stdlib.h"
 #include "MaxDegGen.h"
+#include "KronGen.h"
 
 int GetMaxDeg(const PNGraph& G, bool IsIn){
     TFltPrV Deg;
@@ -503,7 +504,7 @@ void ReadGevParams(ifstream& Gev, double& Shape, double& Location, double& Scale
 }
 
 
-void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKronMtx& FitMtx )
+void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKronMtx& FitMtx, bool SavePerm )
 {
     Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
     TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
@@ -511,8 +512,11 @@ void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKr
 	const int NIter = GetNIter(GNodes);
 	TFile << "NIter: " << NIter << endl;
 
-    if (!GetMtx(CommandLineArgs[MTXGEN], FitMtx))
-        GenNewMtx(G, CommandLineArgs[KRONFIT], FitMtx);
+    if (!GetMtx(CommandLineArgs[MTXGEN], FitMtx)){
+		TExeTm execTime;
+		InitKronecker(CommandLineArgs[KRONFIT], G, FitMtx, SavePerm);
+		TFile << "Time of creation of init matrix: " <<  execTime.GetTmStr() << endl;
+	}
 
     TFile << "Initiator matrix before scaling for nodes and edges: " << endl;
     FitMtx.Dump(TFile);

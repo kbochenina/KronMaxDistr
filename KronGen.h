@@ -8,3 +8,5 @@ void GenNewMtx(const PNGraph& model, const TStr& args, TKronMtx& FitMtx);
 // get approximate NIter for a particular size
 int GetNIter(const int Size);
 int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt);
+// generate new initiator matrix
+int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, bool SavePerm = false);

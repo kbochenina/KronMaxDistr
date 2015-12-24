@@ -287,8 +287,11 @@ public:
 
   // gradient
   void SampleGradient(const int& WarmUp, const int& NSamples, double& AvgLL, TFltV& GradV);
-  double GradDescent(const int& NIter, const double& LrnRate, double MnStep, double MxStep, const int& WarmUp, const int& NSamples);
+  double GradDescent(const int& NIter, const double& LrnRate, double MnStep, double MxStep, const int& WarmUp, const int& NSamples, bool SavePerm = false);
   double GradDescent2(const int& NIter, const double& LrnRate, double MnStep, double MxStep, const int& WarmUp, const int& NSamples);
+  // save and load perm to/from file perm.dat
+  void SavePerm();
+  int LoadPerm();
 
   // KronEM
   void SetRandomEdges(const int& NEdges, const bool isDir = true);

@@ -2619,18 +2619,44 @@ void TKroneckerLL::UpdateGraphDLL(const int& SwapNId1, const int& SwapNId2) {
   }
 }
 
+// load permutation from file perm.dat
+int TKroneckerLL::LoadPerm(){
+	if (!CheckFile("perm.dat"))
+		return Error("TKroneckerLL::LoadPerm()", "File perm.dat cannot be opened");
+	ifstream F("perm.dat");
+	// first two lines are additional
+	string s;
+	getline(F, s);
+	getline(F, s);
+	int Nodes = GetNodes();
+	vector<int> Perm;
+	for (int i = 0; i < Nodes; i++){
+		int Index;
+		F >> Index;
+		if (F.bad())
+			return Error("TKroneckerLL::LoadPerm()", "Error while reading permutation indexes");
+		Perm.push_back(Index);
+	}
+	NodePerm.Clr();
+	for (int i = 0; i < Nodes; i++)
+		NodePerm.Add(Perm[i]);
+	SetIPerm(NodePerm);
+	F.close();
+	return 0;
+}
+
 void TKroneckerLL::SampleGradient(const int& WarmUp, const int& NSamples, double& AvgLL, TFltV& AvgGradV) {
   printf("SampleGradient: %s (%s warm-up):", TInt::GetMegaStr(NSamples).CStr(), TInt::GetMegaStr(WarmUp).CStr());
   int NId1=0, NId2=0, NAccept=0;
   TExeTm ExeTm1;
   if (WarmUp > 0) {
     double Apx = CalcApxGraphLL();
-	printf("\nCalcApxGraphLL() 1st: %f\n", Apx);
+	//printf("\nCalcApxGraphLL() 1st: %f\n", Apx);
     for (int s = 0; s < WarmUp; s++) { SampleNextPerm(NId1, NId2); }
     printf("  warm-up:%s,", ExeTm1.GetTmStr());  ExeTm1.Tick();
   }
   double Apx = CalcApxGraphLL(); // re-calculate LL (due to numerical errors)
-  printf("\nCalcApxGraphLL() 2st: %f\n", Apx);
+  //printf("\nCalcApxGraphLL() 2st: %f\n", Apx);
   CalcApxGraphDLL();
   AvgLL = 0;
   AvgGradV.Gen(LLMtx.Len());  AvgGradV.PutAll(0.0);
@@ -2650,7 +2676,16 @@ void TKroneckerLL::SampleGradient(const int& WarmUp, const int& NSamples, double
     double(100*NAccept)/double(NSamples));
 }
 
-double TKroneckerLL::GradDescent(const int& NIter, const double& LrnRate, double MnStep, double MxStep, const int& WarmUp, const int& NSamples) {
+void TKroneckerLL::SavePerm(){
+	ofstream F("perm.dat");
+	F << TStr::Fmt("Saving permutation: %s, %s. Time: %s", __TIME__, __DATE__, TExeTm::GetCurTm()).CStr() << endl << endl;
+	for (int i = 0; i < NodePerm.Len(); ++i){
+		F << NodePerm[i] << " ";
+	}
+	F.close();
+}
+
+double TKroneckerLL::GradDescent(const int& NIter, const double& LrnRate, double MnStep, double MxStep, const int& WarmUp, const int& NSamples, bool SavePerm) {
   printf("\n----------------------------------------------------------------------\n");
   printf("Fitting graph on %d nodes, %d edges\n", Graph->GetNodes(), Graph->GetEdges());
   printf("Kron iters:  %d (== %d nodes)\n\n", KronIters(), ProbMtx.GetNodes(KronIters()));
@@ -2668,6 +2703,9 @@ double TKroneckerLL::GradDescent(const int& NIter, const double& LrnRate, double
 
   for (int Iter = 0; Iter < NIter; Iter++) {
     printf("%03d] ", Iter);
+	// for penultimate iteration
+	if (SavePerm == true && Iter+2 == NIter)
+		this->SavePerm();
     SampleGradient(WarmUp, NSamples, CurLL, CurGradV);
     for (int p = 0; p < GetParams(); p++) {
       LearnRateV[p] *= 0.95;

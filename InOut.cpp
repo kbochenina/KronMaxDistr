@@ -1,24 +1,25 @@
 #include "stdafx.h"
 #include "InOut.h"
 
-void Error(const TStr& FuncName, const TStr& ErrorMsg){
+int Error(const TStr& FuncName, const TStr& ErrorMsg){
     printf("Error in %s: %s\n", FuncName.CStr(), ErrorMsg.CStr());
     system("pause");
-    exit(1);
+    return -1;
 }
 
 
-void ReadParameters(TStr settingsFN, vector<TStr>& out){
+int ReadParameters(TStr settingsFN, vector<TStr>& out){
     ifstream f;
     f.open(settingsFN.CStr());
     if (!f.is_open())
-        Error("ReadParameters", "File with settings (parameters.txt by default) is not found");
+        return Error("ReadParameters", "File with settings (parameters.txt by default) is not found");
     string insteadOfName = "1 ";
     for (int i = 0; i < NFUNC; i++){
         string s;
         getline(f,s);
         if ( s != FUNCNAMES[i])
-            Error("ReadParameters", "Wrong syntax in file of settings");
+            return Error("ReadParameters", "Wrong syntax in file of settings");
+			
         bool isComment = true;
         while (isComment){
             getline(f,s);
@@ -33,6 +34,7 @@ void ReadParameters(TStr settingsFN, vector<TStr>& out){
         out.push_back(ts);
     }
     f.close();
+	return 0;
 }
 
 void GetNEFromAccDistr(const TFltPrV& deg, int& nodes, int& edges){
@@ -80,9 +82,9 @@ void PlotDegrees(const vector <TStr>& Parameters, const TFltPrV& In, const TFltP
 
 void PrintMtx(const TKronMtx& FitMtxM, ofstream& TFile){
     TFile << "Initiator matrix: ";
-    size_t Dim = FitMtxM.GetDim();
-    for (size_t i = 0; i < Dim; ++i)
-        for (size_t j = 0; j < Dim; ++j){
+    int Dim = FitMtxM.GetDim();
+    for (int i = 0; i < Dim; ++i)
+        for (int j = 0; j < Dim; ++j){
             TFile << FitMtxM.At(i,j);
             if (!(i == Dim-1 && j == Dim-1))
                 TFile << ";";
@@ -102,24 +104,18 @@ void GetParameters(const vector<TStr>& CommandLineArgs, vector<TStr>& Parameters
     Parameters.push_back(Plt); Parameters.push_back(PltType); 
 }
 
-void ReadPNGraphFromFile(const TStr args, PNGraph& G){
-    Try
-        Env = TEnv(args, TNotify::StdNotify);
-    const TStr InFNm = Env.GetIfArgPrefixStr("-i:", "../as20graph.txt", "Input graph file (single directed edge per line)");
-    // load graph
-    G = TSnap::LoadEdgeList<PNGraph>(InFNm, 0, 1);
-    Catch
-}
 
 
-ofstream OpenFile(const TStr& fileName)
+
+ofstream OpenFile(const TStr& fileName, bool& IsError)
 {
-    Try
-        ofstream f(fileName.CStr());
+	IsError = false;
+    ofstream f(fileName.CStr());
     if (f.is_open())
-        return f;		
-    IAssert(1);
-    Catch
+        return f;
+	Error("OpenFile()", "File " + fileName  + " was not open");
+	IsError = true;
+	return f;
 }
 
 void GetMtxFromSepLine(const TStr& line, const TStr& separator, TFltV& matrix){
@@ -144,7 +140,7 @@ void PrintTStrV(const vector<TStr>& CommandLineArgs){
 
 // print the vector of TFltPr
 void PrintTFltPrV(const TFltPrV& V){
-    for (size_t i = 0; i < V.Len(); ++i)
+    for (int i = 0; i < V.Len(); ++i)
         cout << "(" << V[i].GetVal1() << ", " << V[i].GetVal2() << ")" << " ";
     cout << endl;
 }
@@ -154,6 +150,14 @@ void PrintIntV(const vector<int>& V, ofstream& Out){
     for (size_t i = 0; i < V.size(); ++i)
         Out << V[i] << " ";
     Out << endl;
+}
+
+bool CheckFile( const TStr FName )
+{
+	ifstream f(FName.CStr(), ios::in);
+	if (!f)
+		return false;
+	return true;
 }
 
 // Res is a string where Pref is added before Sep in string S

@@ -97,7 +97,7 @@ void TKronMtx::SetForEdgesNoCut(const int& Nodes, const int& Edges) {
     const double EZero = pow((double) Edges, 1.0/double(KronIter));
     const double Factor = EZero / GetMtxSum();
     double Diff = 0.0;
-    for (size_t i = 0; i < Len(); ++i) {
+    for (int i = 0; i < Len(); ++i) {
         At(i) *= Factor;
         if (At(i) > 1){
             Diff += At(i)-1;
@@ -107,14 +107,14 @@ void TKronMtx::SetForEdgesNoCut(const int& Nodes, const int& Edges) {
     if (Diff != 0){
         // calculate non-1 elements count
         int NonOneElems = 0;
-        for (size_t i = 0; i < Len(); ++i){
+        for (int i = 0; i < Len(); ++i){
             if (At(i) != 1)
                 ++NonOneElems;
         }
         
         while (Diff != 0 && NonOneElems > 0){
             double AvgDiff = Diff / NonOneElems;
-            for (size_t i = 0; i < Len(); ++i){
+            for (int i = 0; i < Len(); ++i){
                 if (At(i) != 1){
                     if (At(i) + AvgDiff <= 1){
                         At(i) += AvgDiff;
@@ -312,13 +312,13 @@ bool TKronMtx::CanScaleToDeg(int Deg, TInt NIter){
 	}
 	
 	if (TestFailed)
-		Error("GetMaxStepsCount", "Wrong max steps count calculated");
+		return Error("GetMaxStepsCount", "Wrong max steps count calculated");
 	return MaxStepsCount;
  }
 
 
  bool ScaleThree(TKronMtx& ScaledMtx, const int& NIter, const int& MaxDeg, const TStr& IsDir, const bool& IsIn, 
-	 const TIntPr& Corner, bool ToIncreaseCorner, bool& CornerChanged){
+	 const TIntPr& Corner, bool ToIncreaseCorner, bool& CornerChanged, bool& IsError){
 
 	const double SensCoeff = 0.01;
 	double Step = 0.001;
@@ -334,6 +334,12 @@ bool TKronMtx::CanScaleToDeg(int Deg, TInt NIter){
 	
 	int MaxStepsCount = GetMaxStepsCount(ToIncreaseCorner, ScaledMtx.At(Corner.Val1, Corner.Val2),
 		ScaledMtx.At(Diag1.Val1, Diag1.Val2), ScaledMtx.At(Diag2.Val1, Diag2.Val2), Step);
+
+	// as GetMaxStepsCount can raise an error
+	if (MaxStepsCount == -1) {
+		IsError = true;
+		return false;
+	}
 	
 	CornerChanged = false;
 
@@ -490,15 +496,15 @@ bool TKronMtx::CanScaleToDeg(int Deg, TInt NIter){
  }
 
 // works only for 2x2 size matrix!
-void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TStr& IsDir, bool IsIn)
+int TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TStr& IsDir, bool IsIn)
 {
-	double MaxDeg = MaxDegReq;
+	int MaxDeg = static_cast<int>(MaxDegReq);
    //printf("MaxDegReq:  %d\n", MaxDegReq);
 	if (MaxDeg <= 0)
-		Error("SetForMaxDeg", "MaxDeg <= 0");
+		return Error("SetForMaxDeg", "MaxDeg <= 0");
 	TStr ErrorMsg;
 	if (!CheckMtx(ErrorMsg)) 
-       Error("SetForMaxDeg", ErrorMsg);
+       return Error("SetForMaxDeg", ErrorMsg);
 		
 	TKronMtx ScaledMtx(*this);
 	
@@ -511,16 +517,17 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 		printf("WARNING. Required degree is out of the range. Matrix will be scaled to ");
 		if (MaxExpDeg < MaxDeg) {
 			printf(" maximum ");
-			MaxDeg = floor(pow(GetMaxPossibleDeg(), NIter));
+			MaxDeg = static_cast<int>(floor(pow(GetMaxPossibleDeg(), NIter)));
 		}
 		else{
 			printf(" minimum ");
-			MaxDeg = ceil(pow(GetMinPossibleDeg(), NIter));
+			MaxDeg = static_cast<int>(ceil(pow(GetMinPossibleDeg(), NIter)));
 		}
 		printf(" possible degree: %f\n", MaxDeg);
 	}
 	
-	if (IsEqual(MaxExpDeg, MaxDeg, SensCoeff)) return;
+	if (IsEqual(MaxExpDeg, MaxDeg, SensCoeff)) 
+		return 0;
 
 	TIntPr Corner, Diag1, Diag2, Least;
 	Corner.Val1 = BestRow; Corner.Val2 = BestCol;
@@ -539,7 +546,7 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 	bool CornerChanged = false; 
 	bool StopCondition = false;
 	bool ToIncrease = MaxDeg > MaxExpDeg ? true : false;
-
+	bool IsError = false;
 
 	TStr Case;
 	if ((Corner.Val1 == 0 && Corner.Val2 == 0) || (Corner.Val1 == 1 && Corner.Val2 == 1)) Case = "I";
@@ -553,16 +560,20 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 			if (ToIncrease){
 				Case = "I1a";
 				// Corner cannot change
-				DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, true, CornerChanged);
+				DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, true, CornerChanged, IsError);
+				if (IsError) return -1;
+
 				StopCondition = CheckStopCondition(ScaledMtx, ToIncrease, SensCoeff);
 				if (CornerChanged) {
-					Error("SetForMaxDeg", "Case " + Case + ", Corner chanded on stage 0");
+					return Error("SetForMaxDeg", "Case " + Case + ", Corner chanded on stage 0");
 					ScaledMtx.Dump();
 				}
-				if (!StopCondition && !DecFound)
-					DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Least, false, CornerChanged);
+				if (!StopCondition && !DecFound){
+					DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Least, false, CornerChanged, IsError);
+					if (IsError) return -1;
+				}
 				if (CornerChanged) {
-					Error("SetForMaxDeg", "Case " + Case + ", Corner chanded on stage 1");
+					return Error("SetForMaxDeg", "Case " + Case + ", Corner chanded on stage 1");
 					ScaledMtx.Dump();
 				}
 			}
@@ -575,7 +586,7 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 					Diag1V = ScaledMtx.At(Diag1.Val1, Diag1.Val2); Diag2V = ScaledMtx.At(Diag2.Val1, Diag2.Val2);
 					if (!IsEqual(CornerV, LeastV, SensCoeff)){
 						ScaledMtx.Dump();
-						Error("SetForMaxDeg", "Case " + Case + ", Corner != Least");
+						return Error("SetForMaxDeg", "Case " + Case + ", Corner != Least");
 					}
 					if (CornerV < Diag1V)
 						DecFound = ScaleFour(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, CornerChanged);
@@ -591,21 +602,24 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 				DecFound = ScaleTwo(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, CornerChanged);
 				StopCondition = CheckStopCondition(ScaledMtx, ToIncrease, SensCoeff);
 				if (CornerChanged) {
-					Error("SetForMaxDeg", "Case " + Case + ", Corner chanded on stage 0");
+					return Error("SetForMaxDeg", "Case " + Case + ", Corner chanded on stage 0");
 					ScaledMtx.Dump();
 				}
-				if (!StopCondition && !DecFound)
-					DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, true, CornerChanged);
+				if (!StopCondition && !DecFound){
+					DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, true, CornerChanged, IsError);
+					if (IsError) return -1;
+				}
 			}
 			else {
 				Case = "I2b";
-				DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Least, true, CornerChanged);
+				DecFound = ScaleThree(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Least, true, CornerChanged, IsError);
+				if (IsError) return -1;
 				StopCondition = CheckStopCondition(ScaledMtx, ToIncrease, SensCoeff);
 				if (!StopCondition && !DecFound){
 					CornerV = ScaledMtx.At(Corner.Val1, Corner.Val2); LeastV = ScaledMtx.At(Least.Val1, Least.Val2);
 					Diag1V = ScaledMtx.At(Diag1.Val1, Diag1.Val2); Diag2V = ScaledMtx.At(Diag2.Val1, Diag2.Val2);
 					if (!IsEqual(CornerV, LeastV, SensCoeff)){
-						Error("SetForMaxDeg", "Case " + Case + ", Corner != Least");
+						return Error("SetForMaxDeg", "Case " + Case + ", Corner != Least");
 						ScaledMtx.Dump();
 					}
 					if (CornerV < Diag1V)
@@ -619,13 +633,13 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 	else {
 		Case = "II";
 		if (CornerV > Diag1V)
-			Error("SetForMaxDeg", "Case " + Case + ", Corner > Diag");
+			return Error("SetForMaxDeg", "Case " + Case + ", Corner > Diag");
 		if (ToIncrease){
 			Case = "II2a";
 			DecFound = ScaleFour(ScaledMtx, NIter, MaxDeg, IsDir, IsIn, Corner, CornerChanged);
 			StopCondition = CheckStopCondition(ScaledMtx, ToIncrease, SensCoeff);
 			if (!StopCondition && !CornerChanged && !DecFound){
-				Error("SetForMaxDeg", "Case " + Case + ", Corner was not changed");
+				return Error("SetForMaxDeg", "Case " + Case + ", Corner was not changed");
 				ScaledMtx.Dump();
 			}
 		}
@@ -639,7 +653,7 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 			}
 			StopCondition = CheckStopCondition(ScaledMtx, ToIncrease, SensCoeff);
 			if (!StopCondition && !CornerChanged && !DecFound){
-				Error("SetForMaxDeg", "Case " + Case + ", Corner was not changed");
+				return Error("SetForMaxDeg", "Case " + Case + ", Corner was not changed");
 				ScaledMtx.Dump();
 			}
 		}
@@ -652,22 +666,25 @@ void TKronMtx::SetForMaxDeg(const double& MaxDegReq, const int& NIter, const TSt
 	
 
 	if (!ScaledMtx.CheckMtx(ErrorMsg)) 
-       Error("SetForMaxDeg", ErrorMsg);
+       return Error("SetForMaxDeg", ErrorMsg);
 	
 	At(Corner.Val1,Corner.Val2) = CornerV; At(Diag1.Val1, Diag1.Val2) = Diag1V; 
 	At(Diag2.Val1,Diag2.Val2) = Diag2V; At(Least.Val1, Least.Val2) = LeastV; 
 
 	double MaxExpectedDeg = GetMaxExpectedDeg(NIter, IsDir, IsIn);
-	if (!IsEqual(MaxExpectedDeg, MaxDeg, SensCoeff) && !CheckStopCondition(*this, ToIncrease, SensCoeff))
-		SetForMaxDeg(MaxDeg, NIter);
+	if (!IsEqual(MaxExpectedDeg, MaxDeg, SensCoeff) && !CheckStopCondition(*this, ToIncrease, SensCoeff)){
+		int ErrCode = SetForMaxDeg(MaxDeg, NIter);
+		if (ErrCode == -1)
+			return -1;
+	}
 
 	if (DecFound == false && CheckStopCondition(*this, ToIncrease, SensCoeff)){
 		printf("%f %f %f %f MaxDeg: %f Expected: %f\n", CornerV, Diag1V, Diag2V, LeastV, MaxDeg, ScaledMtx.GetMaxExpectedDeg(NIter, IsDir, IsIn));
 		printf("%f %f %f %f Sum: %f\n", At(Corner.Val1, Corner.Val2), At(Diag1.Val1, Diag1.Val2), 
 			At(Diag2.Val1, Diag2.Val2), At(Least.Val1, Least.Val2), GetMaxExpectedDeg(NIter, IsDir, IsIn));
-		Error("SetForMaxDeg", "Cannot find solution");
+		return Error("SetForMaxDeg", "Cannot find solution");
 	}
-	
+	return 0;
 }
 
 void TKronMtx::AddRndNoise(const double& SDev) {
@@ -1108,9 +1125,9 @@ int GetCol(const TVec<TVec<TFltIntIntTr>>& RowProbCumV, const int &Row, const in
 
 int GetCol(const TVec<TVec<TVec<TFltIntIntTr>>>& RowProbCumV, const int &Row, const int& NIter, TRnd& Rnd){
 	if (RowProbCumV.Len() == 0)
-		Error("GetCol", "Empty probability vector");
+		return Error("GetCol", "Empty probability vector");
 	int n = 0, MtxDim = RowProbCumV[0].Len(); 
-	int RngBegin = 0, RngEnd = pow(double(MtxDim), NIter)-1, PartRngSize = ( RngEnd - RngBegin + 1 ) / MtxDim, RowC = Row;
+	int RngBegin = 0, RngEnd = static_cast<int>(pow(double(MtxDim), NIter)-1), PartRngSize = ( RngEnd - RngBegin + 1 ) / MtxDim, RowC = Row;
 	for (int iter = 0; iter < NIter; iter++) {
 		const double& Prob = Rnd.GetUniDev();
 		int RowProb = RowC  / PartRngSize;
@@ -1123,18 +1140,12 @@ int GetCol(const TVec<TVec<TVec<TFltIntIntTr>>>& RowProbCumV, const int &Row, co
 		PartRngSize /= MtxDim;
 		//printf("MtxCol=%d RngBegin=%d RngEnd=%d\n", MtxCol, RngBegin, RngEnd);
 	}
-	try {
-		if (RngBegin != RngEnd){
-			throw "GetCol() error. Failed to find column index, RngBegin=" + std::to_string((long long)RngBegin) + ", RngEnd=" + std::to_string((long long)RngEnd) + "\n";
-		}
-		//printf("\n");
-		return RngBegin;
+	if (RngBegin != RngEnd){
+		std::string ErrMsg = "Failed to find column index, RngBegin = " + std::to_string((long long)RngBegin) + ", RngEnd = " + std::to_string((long long)RngEnd) + "\n";
+		return Error("GetCol", "Empty probability vector");
 	}
-	catch(const TStr& ex){
-		printf("%s\n", ex.CStr());
-		system("pause");
-		exit(0);
-	}
+	// CHECK!
+	return RngBegin;
 }
 
 bool CheckEdges(TIntV& DegCount, TInt& S, const int&DegAdd, const int&DegToCheck, const int& LeastEdges){
@@ -1190,6 +1201,7 @@ int TKronMtx::AddSecondDir(bool IsOut, const TIntPr& InDegR, const TIntPr& OutDe
 		for (int j = 0; j < EdgesToAdd - Deg; j++){
 			Row = i;
 			int Col = GetCol(RowProbCumV, Row, NIter, Rnd);
+			if (Col == -1) return -1;
 			if (!IsOut) {TInt Add = Row; Row = Col; Col = Add;}
 			if (Row != Col && !G->IsEdge(Row, Col)){
 				int InDeg = G->GetNI(Col).GetInDeg(), OutDeg = G->GetNI(Row).GetOutDeg();
@@ -1247,6 +1259,7 @@ int TKronMtx::AddFirstDir(bool IsOut, const TIntPr& InDegR, const TIntPr& OutDeg
 		for (int j = 0; j < NNodes; j++){
 			int Row = vec[j];
 			int Col = GetCol(RowProbCumV, Row, NIter, Rnd);
+			if (Col == -1) return -1;
 			if (!IsOut) {TInt Add = Row; Row = Col; Col = Add;}
 			if (Row != Col && !G->IsEdge(Row, Col)){
 				int InDeg = G->GetNI(Col).GetInDeg(), OutDeg = G->GetNI(Row).GetOutDeg();
@@ -1311,11 +1324,13 @@ int TKronMtx::AddUnDir(PNGraph& G, const TKronMtx& SeedMtx, const int& NIter, co
 	for (int i = 0; i < NNodes; i++){
 		int Row = i;
 		int InDeg = G->GetNI(Row).GetInDeg(), OutDeg = G->GetNI(Row).GetOutDeg();
-		if (InDeg != OutDeg) Error("AddUnDir()","For undirected graph InDeg != OutDeg");
+		if (InDeg != OutDeg) 
+			return Error("AddUnDir()","For undirected graph InDeg != OutDeg");
 		if (InDeg >= DegReq) 
 			continue;
 		for (int j = 0; j < DegReq-OutDeg; j++){	
 			int Col = GetCol(RowProbCumV, Row, NIter, Rnd);
+			if (Col == -1) return -1;
 			if (Row != Col && !G->IsEdge(Row, Col)){
 				// prevent addition of edge with degree > DegMax
 				//!!!
@@ -1335,7 +1350,7 @@ int TKronMtx::AddUnDir(PNGraph& G, const TKronMtx& SeedMtx, const int& NIter, co
 	printf("%s",s.c_str());*/
 	TStr Msg = "Edges added ("; Msg += EdgesAdded; Msg += ") > edges to add ("; Msg += DegReq * NNodes; Msg += ")";
 	if (EdgesAdded > DegReq * NNodes)
-		Error("AddUnDir", Msg);
+		return Error("AddUnDir", Msg);
 	return Collision;
 }
 
@@ -1376,7 +1391,7 @@ int TKronMtx::AddUnDir(PNGraph& G, const TKronMtx& SeedMtx, const int& NIter, co
 //  }
 //}
 
-void TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const int& NIter, const int& MinDeg, const int&MaxDeg){
+int TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const int& NIter, const int& MinDeg, const int&MaxDeg){
 	TRnd rnd;
 	rnd.GetUniDev();
 	int nodesCount = out->GetNodes();
@@ -1401,7 +1416,7 @@ void TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const in
 					double val = rnd.GetUniDev();
 					// get neighbour node using probability matrix
 					//int nodeId = GetCol(RowProbCumV, i, NIter, rnd);
-					int nodeId = rnd.GetUniDev() * (nodesCount-1);
+					int nodeId = static_cast<int>(rnd.GetUniDev() * (nodesCount-1));
 					if (nodeId == i || out->IsEdge(nodeId,i)) continue;
 					auto NI = out->GetNI(nodeId);
 					int OutDeg = NI.GetOutDeg();
@@ -1447,7 +1462,7 @@ void TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const in
 					// get neighbour node using probability matrix
 					//int NbNode = GetCol(RowProbCumV, NodeToRewire, NIter, rnd);
 					// get random neighbour node
-					int NbNode = rnd.GetUniDev() * (nodesCount-1);
+					int NbNode = static_cast<int>(rnd.GetUniDev() * (nodesCount-1));
 					if (NbNode == i || out->IsEdge(NodeToRewire,NbNode)) continue;
 					// if neighbour node degree is less than MaxDeg, rewire NodeToRewire
 					if (out->GetNI(NbNode).GetInDeg() < MaxDeg){
@@ -1462,18 +1477,19 @@ void TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const in
 					TStr Msg = "Current node degree is less than min deg: ";
 					Msg += CurrNode.GetInDeg(); Msg += " < "; Msg += MinDeg; Msg += " InDeg = "; Msg += InDeg; 
 					Msg += "EToChange = "; Msg += EToChange;
-					Error("RemoveZeroDegreeNodes", Msg);
+					return Error("RemoveZeroDegreeNodes", Msg);
 				}
 				if (out->GetNI(NodeToRewire).GetInDeg() < MinDeg){
 					TStr Msg = "Node to rewire degree is less than min deg: ";
 					Msg += out->GetNI(NodeToRewire).GetInDeg(); Msg += " < "; Msg += MinDeg;
-					Error("RemoveZeroDegreeNodes", Msg);
+					return Error("RemoveZeroDegreeNodes", Msg);
 				}
 				EToChange--;
 				if (EToChange == 0) break;
 			}
 		}
 	}
+	return 0;
 	/*bool IsMaxDeg = false;
 	int MaxDegNode = 0;
 	
@@ -1502,7 +1518,7 @@ void TKronMtx::RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const in
 	
 }
 
-void TKronMtx::GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const TIntPr& InDegR, const TIntPr& OutDegR, const double& NoiseCoeff, const int& Seed){
+int TKronMtx::GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const TIntPr& InDegR, const TIntPr& OutDegR, const double& NoiseCoeff, const int& Seed){
 	const int NNodes = SeedMtx.GetNodes(NIter);
 	const int NEdges = SeedMtx.GetEdges(NIter);
 	//printf("GenFastKronecker() with restrictions. Nodes %d, edges %d\n", NNodes, NEdges);
@@ -1523,7 +1539,10 @@ void TKronMtx::GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const i
 	else {
 		TExeTm ExecTime;
 		ExecTime.Tick();
-		Collisions += AddUnDir(Graph, SeedMtx, NIter, InDegR, Rnd, NoiseCoeff);
+		int RetCode = AddUnDir(Graph, SeedMtx, NIter, InDegR, Rnd, NoiseCoeff);
+		if (RetCode == -1)
+			return -1;
+		Collisions += RetCode;
 		//printf("AddUnDir() time: %f\n", ExecTime);
 	}
 	const int Least = NEdges - Graph->GetEdges();
@@ -1533,6 +1552,7 @@ void TKronMtx::GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const i
 	Collisions += AddEdges(Graph, SeedMtx, NIter, IsDir, Least, Rnd, InDegR.Val2, OutDegR.Val2, NoiseCoeff);
 	//printf("AddEdges() time: %f\n", ExecTime);
 	//printf("             collisions: %d (%.4f)\n", Collisions, Collisions/(double)Graph->GetEdges());
+	return 0;
 }
 
 
@@ -2604,11 +2624,13 @@ void TKroneckerLL::SampleGradient(const int& WarmUp, const int& NSamples, double
   int NId1=0, NId2=0, NAccept=0;
   TExeTm ExeTm1;
   if (WarmUp > 0) {
-    CalcApxGraphLL();
+    double Apx = CalcApxGraphLL();
+	printf("\nCalcApxGraphLL() 1st: %f\n", Apx);
     for (int s = 0; s < WarmUp; s++) { SampleNextPerm(NId1, NId2); }
     printf("  warm-up:%s,", ExeTm1.GetTmStr());  ExeTm1.Tick();
   }
-  CalcApxGraphLL(); // re-calculate LL (due to numerical errors)
+  double Apx = CalcApxGraphLL(); // re-calculate LL (due to numerical errors)
+  printf("\nCalcApxGraphLL() 2st: %f\n", Apx);
   CalcApxGraphDLL();
   AvgLL = 0;
   AvgGradV.Gen(LLMtx.Len());  AvgGradV.PutAll(0.0);
@@ -2621,6 +2643,7 @@ void TKroneckerLL::SampleGradient(const int& WarmUp, const int& NSamples, double
   }
   printf("ing");
   AvgLL = AvgLL / double(NSamples);
+  printf("\nAvgLL: %f\n", AvgLL);
   for (int m = 0; m < LLMtx.Len(); m++) {
     AvgGradV[m] = AvgGradV[m] / double(NSamples); }
   printf(":%s (%.0f/s), accept %.1f%%\n", ExeTm1.GetTmStr(), double(NSamples)/ExeTm1.GetSecs(),

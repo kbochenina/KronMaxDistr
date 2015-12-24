@@ -1,12 +1,12 @@
-void Error(const TStr& FuncName, const TStr& ErrorMsg);
-void ReadParameters(TStr settingsFN, vector<TStr>& out);
+int Error(const TStr& FuncName, const TStr& ErrorMsg);
+int ReadParameters(TStr settingsFN, vector<TStr>& out);
 void PlotDegrees(const vector <TStr>& Parameters, const TFltPrV& In, const TFltPrV& Out, const TStr& Type);
 void GetParameters(const vector<TStr>& CommandLineArgs, vector<TStr>& Parameters);
 void PrintMtx(const TKronMtx& FitMtxM, ofstream& TFile);
 // read graph from file
 void ReadPNGraphFromFile(const TStr args, PNGraph& G);
 void ReadPNGraphFromFile(const TStr FName, PNGraph& G);
-ofstream OpenFile(const TStr& fileName);
+ofstream OpenFile(const TStr& fileName, bool& IsError);
 void ReadMtx(const TStr& Mtx, const TInt& MtxSize, TKronMtx& FitMtx);
 // print the vector of TStr
 void PrintTStrV(const vector<TStr>& CommandLineArgs);
@@ -16,5 +16,6 @@ void PrintTFltPrV(const TFltPrV& V);
 void AddPrefix(const char* Pref, const char * Sep, const char* S, TStr& Res);
 // print vector of int to file
 void PrintIntV(const vector<int>& V, ofstream& Out);
-
+// check file for existence
+bool CheckFile(const TStr FName);
 

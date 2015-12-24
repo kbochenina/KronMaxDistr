@@ -5,6 +5,7 @@
 #include "InOut.h"
 #include "KronGen.h"
 #include "MaxDegGen.h"
+#include "TestLL.h"
 #include <boost/random/mersenne_twister.hpp>
 
 ofstream TFile;
@@ -17,17 +18,29 @@ int _tmain(int argc, _TCHAR* argv[])
     const TStr SettingsFNm = Env.GetIfArgPrefixStr("-s:", "parameters.txt", "Settings filename");
     std::vector<TStr> commandLineArgs;
     // read command line arguments for all generators
-    ReadParameters(SettingsFNm, commandLineArgs);
+    if (ReadParameters(SettingsFNm, commandLineArgs) == -1){
+		TFile.close();
+		return -1;
+	}
     // file name with statistics
     Env = TEnv(commandLineArgs[KRONTEST], TNotify::NullNotify);
     const TStr StatFile = Env.GetIfArgPrefixStr("-ot:", "stat.tab", "Name of output file with statistics");
     // TFile is global variable
-    TFile = OpenFile(StatFile.CStr());
-    //KroneckerBySample(commandLineArgs);
-    // MaxDegGen(commandLineArgs); 
+	bool IsError = false;
+    TFile = OpenFile(StatFile.CStr(), IsError);
+	if (IsError)
+		return -1;
+    //if (!KroneckerBySample(commandLineArgs)) {
+	// TFile.close();
+	// return -1;
+	//}
+    // if (MaxDegGen(commandLineArgs) == -1)
+	//		return -1; 
     //TestRealGraph(commandLineArgs);
-
-    TFile.close();
+	if (GetModelInitMtx(commandLineArgs) == -1){
+		TFile.close();
+		return -1;
+	}
     return 0;
 }
 

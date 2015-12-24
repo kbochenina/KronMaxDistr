@@ -3,10 +3,10 @@
 #include "InOut.h"
 
 
-void ScaleFitMtx(int ModelNodes, int ModelEdges, TFlt MaxDegInModel, TFlt MaxDegOutModel, TKronMtx& FitMtx, const TInt& NIter, TStr IsDir, const TStr& ScaleMtx, ofstream& TFile){
+int ScaleFitMtx(int ModelNodes, int ModelEdges, TFlt MaxDegInModel, TFlt MaxDegOutModel, TKronMtx& FitMtx, const TInt& NIter, TStr IsDir, const TStr& ScaleMtx, ofstream& TFile){
 	// check if ModelNodes and NIter are consistent
 	if (pow(FitMtx.GetDim(), (double)NIter) != ModelNodes)
-		Error("ScaleFitMtx", "ModelNodes is not equal to 2^NIter");
+		return Error("ScaleFitMtx", "ModelNodes is not equal to 2^NIter");
 	// scale init matrix to match number of edges
 	ScaleFitMtxForEdges(FitMtx, NIter, ModelEdges, TFile);	
 
@@ -29,11 +29,13 @@ void ScaleFitMtx(int ModelNodes, int ModelEdges, TFlt MaxDegInModel, TFlt MaxDeg
 			IsDir = "false";
 			ScaleFitMtxForUnDir(FitMtx, TFile);
 		}
-		ScaleFitMtx(FitMtx, NIter, ModelNodes, MaxDegOutModel, IsDir);
+		if (ScaleFitMtx(FitMtx, NIter, ModelNodes, static_cast<int>(MaxDegOutModel.Val), IsDir) == -1)
+			return -1;
 		//FitMtx.Dump();
 		TFile << "Expected maximum degree in Kronecker graph: in " << FitMtx.GetMaxExpectedDeg(NIter, IsDir, true) << 
 			",  out " << FitMtx.GetMaxExpectedDeg(NIter, IsDir, false) << endl;
 	}
+	return 0;
 }
 
 
@@ -59,18 +61,22 @@ void ScaleFitMtxForUnDir(TKronMtx& FitMtx, ofstream& TFile){
 	FitMtx.EqualizeBC();
 }
 
-void ScaleFitMtx(TKronMtx& FitMtx, const TInt& NIter, const int& InitModelNodes, const int& MaxModelDeg, const TStr& IsDir){
+int ScaleFitMtx(TKronMtx& FitMtx, const TInt& NIter, const int& InitModelNodes, const int& MaxModelDeg, const TStr& IsDir){
 	//TFile << "Before scaling: " << endl;
 	//FitMtx.Dump(TFile);
 	// check ceil()
-	double ModelIter = ceil(log10((double)InitModelNodes) / log10((double)FitMtx.GetDim()));
+	int ModelIter = static_cast<int>(ceil(log10((double)InitModelNodes) / log10((double)FitMtx.GetDim())));
 	// rename function and variable
-	int MinMaxDeg = (FitMtx.GetMaxExpectedDeg(NIter.Val, IsDir, false) + 0.5);
+	int MinMaxDeg = static_cast<int>((FitMtx.GetMaxExpectedDeg(NIter.Val, IsDir, false) + 0.5));
 	//cout << "Maximum degree in model graph: " << MaxModelDeg << endl << "Expected Kronecker maximum degree: "<<  MinMaxDeg << endl;
 	// ModelIter instead of NIter
-	FitMtx.SetForMaxDeg(MaxModelDeg, ModelIter, "false", false);
+	int ErrCode = 0;
+	ErrCode = FitMtx.SetForMaxDeg(MaxModelDeg, ModelIter, "false", false);
+	if (ErrCode == -1)
+		return -1;
 	TFile << "After scaling " << endl;
 	FitMtx.Dump(TFile);
+	return 0;
 }
 
 

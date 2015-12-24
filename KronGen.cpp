@@ -6,26 +6,19 @@
 
 //ofstream TFile;
 
-void CheckParams(const TStr& model_gen, const TStr& model_plt)
+int CheckParams(const TStr& model_gen, const TStr& model_plt)
 {
-    try
-    {
-        if (model_gen != model_plt)
-        {
-            if (model_gen != "model+kron")
-                throw 1;
-            if (model_gen == "none" && model_plt != "none")
-                throw 1;
-            if (model_plt == "model+kron" && model_gen != "model+kron")
-                throw 1;
-        }
-    }
-    catch (int i){
-        printf("Inconsistency in KRONTEST parameters\n");
-        system("pause");
-        exit(1);
-    }
-}
+ 	if (model_gen != model_plt)
+	{
+		if (model_gen != "model+kron")
+			return Error("CheckParams()", "model_gen != \"model+kron\"");
+		if (model_gen == "none" && model_plt != "none")
+			return Error("CheckParams()", "model_gen == \"none\" && model_plt != \"none\"");
+		if (model_plt == "model+kron" && model_gen != "model+kron")
+			return Error("CheckParams()", "model_plt == \"model+kron\" && model_gen != \"model+kron\"");
+	}
+	return 0;
+ }
 
 int BasicGraphGen(const TStr args, PNGraph &GD){
     Env = TEnv(args, TNotify::StdNotify);
@@ -144,6 +137,7 @@ int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx){
 	double LogLike = 0;
 	//if (GradType == 1) {
 	LogLike = KronLL.GradDescent(GradIter, LrnRate, MnStep, MxStep, WarmUp, NSamples);
+	TFile << "InitKronecker LL: " << LogLike << endl;
 	//} else if (GradType == 2) {
 	//  LogLike = KronLL.GradDescent2(GradIter, LrnRate, MnStep, MxStep, WarmUp, NSamples); }
 	//else{ Fail; }
@@ -190,7 +184,7 @@ int GetNIter( const int Size )
 		return -1;
 	}
 	double Frac = log(static_cast<double>(Size)) / log (2.0);
-	int IntPart = floor(Frac);
+	int IntPart = static_cast<int>((Frac));
 	if (Frac - IntPart <= 0.5)
 		return IntPart;
 	else 
@@ -215,7 +209,7 @@ bool GetMtx(const TStr& MtxArgs, TKronMtx& FitMtxModel){
 
 
 // get model graph according to args
-void GetModel(const TStr& Args, PNGraph& G){
+int GetModel(const TStr& Args, PNGraph& G){
 	Env = TEnv(Args, TNotify::NullNotify);
 	const TStr Gen = Env.GetIfArgPrefixStr("-g:", "gen", "How to get model graph: read, gen, deg, genpy");
 	const TStr InFNm = Env.GetIfArgPrefixStr("-i:", "", "Input graph file (single directed edge per line)");
@@ -223,14 +217,19 @@ void GetModel(const TStr& Args, PNGraph& G){
 	TExeTm execTime;
 	if (Gen == "gen")
 		BasicGraphGen(Args, G);
-	else if (Gen == "read")
-		ReadPNGraphFromFile(InFNm, G);
+	else if (Gen == "read"){
+		bool FileExists = CheckFile(InFNm);
+		if (!FileExists)
+			return Error("KronGen GetModel()", "File does not exist");
+		G = TSnap::LoadEdgeList<PNGraph>(InFNm, 0, 1);
+	}
 	else if (Gen == "genpy")
 	{
 		PUNGraph GU;
 		GenPy(GU, TFile, Args);	
 		G = TSnap::ConvertGraph<PNGraph>(GU);
 	}
+	return 0;
 	//TFile << "Time of getting model: " <<  execTime.GetTmStr() << endl;
 	/*TFile << "Model graph: " << G->GetNodes() << " nodes, " << G->GetEdges() << " edges\n";
 	TIntV DegV;
@@ -298,17 +297,17 @@ void GenKron(const TStr& Args, TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV&
 
     
 
-void GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt)
+int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt)
 {
     PNGraph G;
     size_t PSize = Parameters.size();
     if (GRAPHGEN >= PSize || MTXGEN >= PSize || KRONGEN >= PSize || KRONFIT >= PSize)
-        Error("GetGraphs", "Wrong index in array of parameters");
+        return Error("GetGraphs", "Wrong index in array of parameters");
 
     GetModel(Parameters[GRAPHGEN], G);
 
     if (G->GetNodes() == 0)
-        Error("GetGraphs", "Empty graph");
+        return Error("GetGraphs", "Empty graph");
 
     TFltPrV MDegIn, MDegOut;
     TSnap::GetInDegCnt(G, MDegIn);
@@ -336,7 +335,7 @@ void GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr
         const TInt NIter = Env.GetIfArgPrefixInt("-i:", 1, "Number of iterations of Kronecker product");
         
         if (pow(FitMtxM.GetDim(), static_cast<double>(NIter)) != ModelNodes)
-            Error("GetGraphs", "Inconsistent value of -i: parameter, KronNodes != ModelNodes");
+            return Error("GetGraphs", "Inconsistent value of -i: parameter, KronNodes != ModelNodes");
               
 
         // in and out average degrees of Kronecker graphs
@@ -348,15 +347,15 @@ void GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr
         PlotDegrees(Parameters, KronDegAvgIn, KronDegAvgOut, "kron");
 
     }
+	return 0;
 }
 
 
 
 // generates Kronecker model using configuration model of small model network
 // and compare it to big network
-void KroneckerBySample(vector<TStr> CommandLineArgs){
-    Try
-        Env = TEnv(CommandLineArgs[KRONTEST], TNotify::NullNotify);
+int KroneckerBySample(vector<TStr> CommandLineArgs){
+    Env = TEnv(CommandLineArgs[KRONTEST], TNotify::NullNotify);
     // generation of big model and its Kronecker product is required
     const TStr Gen = Env.GetIfArgPrefixStr("-gen:", "model+kron", "Generation of sample or/and its Kronecker product (model, kron, model+kron)");
     // plot type
@@ -364,8 +363,12 @@ void KroneckerBySample(vector<TStr> CommandLineArgs){
     // time estimates file name
     const TStr StatFile = Env.GetIfArgPrefixStr("-ot:", "stat.tab", "Name of output file with statistics");
 
-    TFile = OpenFile(StatFile.CStr());
-    CheckParams(Gen, Plt);
+	bool IsError = false;
+    TFile = OpenFile(StatFile.CStr(), IsError);
+	if (IsError)
+		return -1;
+    if (!CheckParams(Gen, Plt))
+		return -1;
     
     PyInit("PySettings.txt");
       
@@ -381,6 +384,5 @@ void KroneckerBySample(vector<TStr> CommandLineArgs){
     
 
     Py_Finalize();
-
-    Catch
+	return 0;
 }

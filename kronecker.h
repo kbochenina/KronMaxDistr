@@ -63,7 +63,7 @@ public:
   double GetMaxExpectedDeg(const int& NIter, const TStr& IsDir, bool IsIn, int& BestRow, int& BestCol) const;
 
   // >> check!
-  void SetForMaxDeg(const double& MaxDeg, const int& NIter, const TStr& IsDir = "false", bool IsIn = false);
+  int SetForMaxDeg(const double& MaxDeg, const int& NIter, const TStr& IsDir = "false", bool IsIn = false);
   // check if all mtx values are >=0 and <=1
   bool CheckMtx(TStr& ErrorMsg);
   // get mtx sum
@@ -75,7 +75,7 @@ public:
   // slow and exact version
   static void GenKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const int& Seed=0);
   // version with restrictions on minimum and maximum degrees
-  static void GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const TIntPr& InDegR, const TIntPr& OutDegR, const double& NoiseCoeff = 0.0, const int& Seed=0);
+  static int GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const TIntPr& InDegR, const TIntPr& OutDegR, const double& NoiseCoeff = 0.0, const int& Seed=0);
   // version with noise
   static void GenFastKronecker(PNGraph& Graph, const TKronMtx& SeedMtx, const int& NIter, const bool& IsDir, const int& Seed=0, double NoiseCoeff = 0.0);
   // basic version without noise and restrictions
@@ -108,7 +108,7 @@ public:
   double GetEigMin() const;
   double GetMax() const;
   void SetForMaxEigen(const double K, const int& NIter);
-  static void RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const int& NIter, const int& MinDeg, const int& MaxDeg);
+  static int RemoveZeroDegreeNodes(PNGraph& out, const TKronMtx& Mtx, const int& NIter, const int& MinDeg, const int& MaxDeg);
   //void DelEdges(PNGraph& out, const TKronMtx& Mtx, const int& NIter, const int& EdgesToDel);
 
 

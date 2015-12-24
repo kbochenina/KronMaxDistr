@@ -25,7 +25,7 @@ public:
 map<TStr, tuple<TStrV,TStrV, int, TStrV>,cmp_str> funcInfo;
 
 int FindSeedIndex(const TStrV& Vec){
-    for (size_t i = 0; i < Vec.Len(); i++){
+    for (int i = 0; i < Vec.Len(); i++){
         if (Vec[i] == "seed")
             return i;
     }
@@ -146,7 +146,7 @@ int CallPyFunction(const char *moduleName, const char *funcName, const TStrV& ar
 			// index of current PyObject in array of PyObjects
 			int argPyObjIndex = 0, argStrIndex = 0;
 			// parsing arguments
-			for (size_t i = 0; i < argc; i++)
+			for (int i = 0; i < argc; i++)
 			{
 				PyObject **arg = new PyObject*[1];
 				//printf("argtypes[%d] = %s\n", i, argTypes[i].CStr());
@@ -229,7 +229,7 @@ int ParseArgs(const char* funcname, const TStr& parameters, TStrV& args, TStrV& 
 	{
 		if (i->first == funcname)
 		{
-			size_t argCount = get<1>(i->second).Len();
+			int argCount = get<1>(i->second).Len();
 			if (get<1>(i->second).Len() != argCount)
 			{
 				printf("ParseArgs error\n");
@@ -237,7 +237,7 @@ int ParseArgs(const char* funcname, const TStr& parameters, TStrV& args, TStrV& 
 			}
 			int reqArgs = get<2>(i->second);
 			int argRead = 0;
-			for (size_t j = 0; j < argCount; j++)
+			for (int j = 0; j < argCount; j++)
 			{
 				TStr arg = Env.GetIfArgPrefixStr("-" + get<0>(i->second)[j] + ":", "", get<0>(i->second)[j]);
 				TStr argType = get<1>(i->second)[j];
@@ -290,17 +290,17 @@ int GenPy(PUNGraph &res, ofstream& TFile, const TStr& parameters)
 	execTime.Tick();
 	PyObject*** nodes = new PyObject**[1];
 	GetNodes(G, nodes);
-	int nodesCount = PyList_Size(*(nodes[0]));
+	int nodesCount = static_cast<int>(PyList_Size(*(nodes[0])));
 	//printf("nodesCount = %d, ", nodesCount);
 	res = PUNGraph::TObj::New();
     res->Reserve(nodesCount, nodesCount*nodesCount);
-	for (size_t i = 0; i < nodesCount; i++)
+	for (int i = 0; i < nodesCount; i++)
 		res->AddNode(i);
 	Py_DECREF(nodes);
 
 	PyObject*** edges = new PyObject**[1];
 	GetEdges(G, edges);
-	int edgesCount = PyList_Size(*(edges[0]));
+	int edgesCount = static_cast<int>(PyList_Size(*(edges[0])));
 	//printf("edgesCount = %d\n", edgesCount);
 	for (size_t i = 0; i < edgesCount; i++)
 	{

@@ -24,10 +24,10 @@ int GetMaxDegFromGEV( double Scale, double Location, double Shape, double mult =
     double r = ((double) rand() / (RAND_MAX));
     int Deg = 0;
     if (Shape > 0)
-        Deg = ceil(GEVGetMinX(Scale, Location, Shape));
+        Deg = static_cast<int>(ceil(GEVGetMinX(Scale, Location, Shape)));
     int MaxDeg = INT_MAX;
     if (Shape < 0)
-        MaxDeg = floor(GEVGetMaxX(Location, Scale, Shape));
+        MaxDeg = static_cast<int>(floor(GEVGetMaxX(Location, Scale, Shape)));
 	// cout << "Deg: " << Deg << " MaxDeg: " << MaxDeg << endl;
     cout << "Deg: " << Deg << " Cdf: " << GevCDF(Scale, Location, Shape, Deg) << " r = " << r << endl;
     while (GevCDF(Scale, Location, Shape, Deg, mult) < r && Deg <= MaxDeg){
@@ -42,10 +42,10 @@ int GevMaxDegFromGEVTrunc( double Scale, double Location, double Shape, double M
 	double r = ((double) rand() / (RAND_MAX));
 	int Deg = 0;
 	if (Shape > 0)
-		Deg = ceil(GEVGetMinX(Scale, Location, Shape));
+		Deg = static_cast<int>(ceil(GEVGetMinX(Scale, Location, Shape)));
 	int MaxDeg = INT_MAX;
 	if (Shape < 0)
-		MaxDeg = floor(GEVGetMaxX(Location, Scale, Shape));
+		MaxDeg = static_cast<int>(floor(GEVGetMaxX(Location, Scale, Shape)));
 
 	bool Flag = false;
 	while (!Flag){
@@ -108,7 +108,7 @@ void GetSubGraph( int Size, int GenType, const PNGraph& G, TRnd& Rnd, vector<PNG
 		TIntV NIdVec;
 		SubGraph->GetNIdV(NIdVec);
 		int MaxDegSubGraph = 0;
-		for (size_t i = 0; i < NIdVec.Len(); ++i){
+		for (int i = 0; i < NIdVec.Len(); ++i){
 			int SubGraphID = NIdVec[i];
 			/*cout << "SubGraph id: " << SubGraphID << " SubGraph degree: " 
 				<< SubGraph->GetNI(SubGraphID).GetDeg() << " Graph Deg: " << G->GetNI(SubGraphID).GetDeg() << endl;*/
@@ -215,7 +215,7 @@ void TestRealGraph(const vector<TStr>& CommandLineArgs){
 
 	
 
-	TRnd Rnd(time(NULL));
+	TRnd Rnd(static_cast<int>(time(NULL)));
     // read PNGraph from file
     PNGraph G = TSnap::LoadEdgeList<PNGraph>(InFNm, 0, 1);
 	int GNodes = G->GetNodes();
@@ -230,7 +230,7 @@ void TestRealGraph(const vector<TStr>& CommandLineArgs){
 	// output filename
 	const TStr MaxDegFile = Env.GetIfArgPrefixStr("-fn:", "maxdeg.tab", "Name of output file with statistics");
 	ofstream Out(MaxDegFile.CStr());
-	WriteHeader(Out, CommandLineArgs[GRAPHGEN], NSamples, log(RealSize)/log(10.0), SF, true);
+	WriteHeader(Out, CommandLineArgs[GRAPHGEN], NSamples, static_cast<int>(log(RealSize)/log(10.0)), SF, true);
 
 	TKronMtx FitMtx;
 	double Scale = 0, Location = 0, Shape = 0;
@@ -295,7 +295,7 @@ void TestRealGraph(const vector<TStr>& CommandLineArgs){
 	}
 
 	int i = 0;
-	for (size_t Size = MinSize; Size <= RealSize; Size *= SF){
+	for (int Size = MinSize; Size <= RealSize; Size *= SF){
 		WriteMaxDegSeq(Out, "Model", Size, MaxDegModelDiffSizes[i]);
 		//WriteMaxDegSeq(Out, "GEV", Size, MaxDegGEVDiffSizes[i++]);
 		++i;
@@ -326,126 +326,132 @@ void TestRealGraph(const vector<TStr>& CommandLineArgs){
 // with a given filename (-fn parameter of MAXDEGGEN)
 // default filename is maxdeg.tab
 // N (the number of samples) is the -n parameter of MAXDEGGEN
-void MaxDegGen( const vector<TStr>& CommandLineArgs )
+int MaxDegGen( const vector<TStr>& CommandLineArgs )
 {
-    Try
-        srand((unsigned(time(NULL))));
+
+	srand((unsigned(time(NULL))));
                 
-        Env = TEnv(CommandLineArgs[MAXDEGGEN], TNotify::NullNotify);
-        // output filename
-        const TStr MaxDegFile = Env.GetIfArgPrefixStr("-fn:", "maxdeg.tab", "Name of output file with statistics");
-        const TInt N = Env.GetIfArgPrefixInt("-n:", 1, "Number of samples to generate");
+	Env = TEnv(CommandLineArgs[MAXDEGGEN], TNotify::NullNotify);
+	// output filename
+	const TStr MaxDegFile = Env.GetIfArgPrefixStr("-fn:", "maxdeg.tab", "Name of output file with statistics");
+	const TInt N = Env.GetIfArgPrefixInt("-n:", 1, "Number of samples to generate");
 
-        Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
-        TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
-        const TInt NIter = Env.GetIfArgPrefixInt("-i:", 10, "Iterations of Kronecker product");
-        const TInt SF = Env.GetIfArgPrefixInt("-sf:", 1, "sf - 1 is how many times the number of iterations will increase");
-        const TStr ScaleMtx = Env.GetIfArgPrefixStr("-scalemtx:", "true", "Scale initiator matrix to fit for maximum degree");
+	Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
+	TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
+	const TInt NIter = Env.GetIfArgPrefixInt("-i:", 10, "Iterations of Kronecker product");
+	const TInt SF = Env.GetIfArgPrefixInt("-sf:", 1, "sf - 1 is how many times the number of iterations will increase");
+	const TStr ScaleMtx = Env.GetIfArgPrefixStr("-scalemtx:", "true", "Scale initiator matrix to fit for maximum degree");
 
-        TStr InFName, OutFName;
-        AddPrefix("_in", ".", MaxDegFile.CStr(), InFName);
-        AddPrefix("_out", ".", MaxDegFile.CStr(), OutFName);
+	TStr InFName, OutFName;
+	AddPrefix("_in", ".", MaxDegFile.CStr(), InFName);
+	AddPrefix("_out", ".", MaxDegFile.CStr(), OutFName);
 
-        ofstream OutIn(InFName.CStr());
-        ofstream OutOut(OutFName.CStr());
+	ofstream OutIn(InFName.CStr());
+	ofstream OutOut(OutFName.CStr());
 
-        bool Dir = IsDir == "true" ? true : false;
-        TKronMtx FitMtx;
-        vector<int> MaxDegModelIn, MaxDegModelOut, ReqMaxDeg;
-        // each element of vector - list of N maximum degrees for a particular size
-        vector<vector<int>> MaxDegKronIn, MaxDegKronOut;
-        for (int i = 0; i < SF; i++){
-            MaxDegKronIn.push_back(vector<int>());
-            MaxDegKronOut.push_back(vector<int>());
-        }
+	bool Dir = IsDir == "true" ? true : false;
+	TKronMtx FitMtx;
+	vector<int> MaxDegModelIn, MaxDegModelOut, ReqMaxDeg;
+	// each element of vector - list of N maximum degrees for a particular size
+	vector<vector<int>> MaxDegKronIn, MaxDegKronOut;
+	for (int i = 0; i < SF; i++){
+		MaxDegKronIn.push_back(vector<int>());
+		MaxDegKronOut.push_back(vector<int>());
+	}
 
-        PyInit("PySettings.txt");
+	PyInit("PySettings.txt");
                
 
-        // generate N samples of graph with GRAPHGEN parameter
-        for (size_t i = 0; i < N; ++i){
-            if ( (i + 1) % 100 == 0) 
-                cout << "Sample index: " << i + 1 << endl;
-            PNGraph G;
+	// generate N samples of graph with GRAPHGEN parameter
+	for (size_t i = 0; i < N; ++i){
+		if ( (i + 1) % 100 == 0) 
+			cout << "Sample index: " << i + 1 << endl;
+		PNGraph G;
                         
-            GetModel(CommandLineArgs[GRAPHGEN], G);
-            MaxDegModelIn.push_back(GetMaxDeg(G,true));
-            MaxDegModelOut.push_back(GetMaxDeg(G,false));
-            TFile << "Model edges: " << G->GetEdges() << endl;
+		if (GetModel(CommandLineArgs[GRAPHGEN], G) == -1)
+			return -1;
+		MaxDegModelIn.push_back(GetMaxDeg(G,true));
+		MaxDegModelOut.push_back(GetMaxDeg(G,false));
+		TFile << "Model edges: " << G->GetEdges() << endl;
 
-            // estimate initiator matrix for the first sample
-            if (i == 0)
-                EstimateInitMtx(CommandLineArgs, G, FitMtx);
-        }
+		// estimate initiator matrix for the first sample
+		if (i == 0)
+			EstimateInitMtx(CommandLineArgs, G, FitMtx);
+	}
 
-        // estimate GEV parameters from N samples
-        double Scale = 0, Location = 0, Shape = 0;
-        GetGevParams(CommandLineArgs[MAXDEGGEN], MaxDegModelIn, MaxDegModelOut, Scale, Location, Shape);
+	// estimate GEV parameters from N samples
+	double Scale = 0, Location = 0, Shape = 0;
+	GetGevParams(CommandLineArgs[MAXDEGGEN], MaxDegModelIn, MaxDegModelOut, Scale, Location, Shape);
         
         
 
-        // generate N samples of Kronecker graphs of various sizes
-        for (size_t i = 0; i < N; ++i){
-            TExeTm t;
-                if ( (i + 1) % 100 == 0) 
-                cout << "Sample index: " << i + 1 << endl;
-            for (int j = 0; j < SF; ++j){
-                if (ScaleMtx == "true"){
-                    // get maximum degree from GEV distribution
-                    int MaxDeg = GetMaxDegFromGEV(Scale, Location, Shape);
-                    if (MaxDeg == 0)
-                        Error("GetMaxDegFromGEV()", "MaxDeg = 0");
-                    //cout << "Time of GetMaxDegFromGEV(): " <<  t.GetTmStr() << endl;
-                    if (j == 0)
-                        ReqMaxDeg.push_back(MaxDeg);
-                    // cout << "Before scaling: " << endl;
-                    t.Tick();
-                    ScaleFitMtx(FitMtx, NIter, pow(2.00, NIter), MaxDeg, IsDir);
-                    //cout << "Time of ScaleFitMtx(): " <<  t.GetTmStr() << endl;
-                    // cout << "After scaling: " << endl;
-                    // TFile << "Initiator matrix after scaling for maximum degree: " << endl;
-                    // FitMtx.Dump(TFile);
-                }
-                t.Tick();
+	// generate N samples of Kronecker graphs of various sizes
+	for (size_t i = 0; i < N; ++i){
+		TExeTm t;
+			if ( (i + 1) % 100 == 0) 
+			cout << "Sample index: " << i + 1 << endl;
+		for (int j = 0; j < SF; ++j){
+			if (ScaleMtx == "true"){
+				// get maximum degree from GEV distribution
+				int MaxDeg = GetMaxDegFromGEV(Scale, Location, Shape);
+				if (MaxDeg == 0)
+					return Error("GetMaxDegFromGEV()", "MaxDeg = 0");
+				//cout << "Time of GetMaxDegFromGEV(): " <<  t.GetTmStr() << endl;
+				if (j == 0)
+					ReqMaxDeg.push_back(MaxDeg);
+				// cout << "Before scaling: " << endl;
+				t.Tick();
+				int ErrCode = 0;
+				ErrCode = ScaleFitMtx(FitMtx, NIter, static_cast<int>(pow(2.00, NIter)), MaxDeg, IsDir);
+				if (ErrCode == -1)
+					return -1;
+				//cout << "Time of ScaleFitMtx(): " <<  t.GetTmStr() << endl;
+				// cout << "After scaling: " << endl;
+				// TFile << "Initiator matrix after scaling for maximum degree: " << endl;
+				// FitMtx.Dump(TFile);
+			}
+			t.Tick();
 
-                PNGraph Kron;
-                TKronMtx::GenFastKronecker(Kron, FitMtx, NIter+j, pow(FitMtx.GetSum(), NIter+j), Dir, rand());
-                //cout << "Time of GenFastKronecker(): " <<  t.GetTmStr() << endl;
-                if (i == 0) {
-                    int KronSize = pow(2.00, NIter+i);
-                    TFile << "Kron size: " << KronSize;
-                    TFile << " Kron edges: " << Kron->GetEdges() << endl;
-                }
-                t.Tick();
-                MaxDegKronIn[j].push_back(GetMaxDeg(Kron, true));
-                //cout << "Time of GetMaxDeg(): " <<  t.GetTmStr() << endl;
-                MaxDegKronOut[j].push_back(GetMaxDeg(Kron, false));
-            }
-        }
+			PNGraph Kron;
+			TKronMtx::GenFastKronecker(Kron, FitMtx, NIter+j, static_cast<int>(pow(FitMtx.GetSum(), NIter+j)), Dir, rand());
+			//cout << "Time of GenFastKronecker(): " <<  t.GetTmStr() << endl;
+			if (i == 0) {
+				int KronSize = static_cast<int>(pow(2.00, NIter+i));
+				TFile << "Kron size: " << KronSize;
+				TFile << " Kron edges: " << Kron->GetEdges() << endl;
+			}
+			t.Tick();
+			MaxDegKronIn[j].push_back(GetMaxDeg(Kron, true));
+			//cout << "Time of GetMaxDeg(): " <<  t.GetTmStr() << endl;
+			MaxDegKronOut[j].push_back(GetMaxDeg(Kron, false));
+		}
+	}
     
-        WriteHeader(OutIn, CommandLineArgs[GRAPHGEN], N, NIter, SF, true);
-        WriteHeader(OutOut, CommandLineArgs[GRAPHGEN], N, NIter, SF, true);
-        int BasicSize = static_cast<float>(NIter);
-        WriteMaxDegSeq(OutIn, "Model", pow(2, BasicSize), MaxDegModelIn);
-        WriteMaxDegSeq(OutOut, "Model", pow(2, BasicSize), MaxDegModelOut);
+	WriteHeader(OutIn, CommandLineArgs[GRAPHGEN], N, NIter, SF, true);
+	WriteHeader(OutOut, CommandLineArgs[GRAPHGEN], N, NIter, SF, true);
+	int BasicSize = static_cast<int>(NIter);
+	const int Size = static_cast<int>(pow(2, BasicSize));
+	WriteMaxDegSeq(OutIn, "Model", Size, MaxDegModelIn);
+	WriteMaxDegSeq(OutOut, "Model", Size, MaxDegModelOut);
 
-        for (size_t i = 0; i < SF; i++){
-            WriteMaxDegSeq(OutIn, "Kron", pow(2, BasicSize+i), MaxDegKronIn[i]);
-            WriteMaxDegSeq(OutOut, "Kron", pow(2, BasicSize+i), MaxDegKronOut[i]);
-        }
+	for (size_t i = 0; i < SF; i++){
+		const int SizeI = static_cast<int>(pow(2, BasicSize+i));
+		WriteMaxDegSeq(OutIn, "Kron", SizeI, MaxDegKronIn[i]);
+		WriteMaxDegSeq(OutOut, "Kron", SizeI, MaxDegKronOut[i]);
+	}
 
-        WriteMaxDegSeq(OutOut, "Kron req", pow(2, BasicSize), ReqMaxDeg);
+	WriteMaxDegSeq(OutOut, "Kron req", Size, ReqMaxDeg);
 
 
-        Py_Finalize();
+	Py_Finalize();
 
         
-        OutIn << "Shape = " << Shape << " Location = " << Location << " Scale = " << Scale << endl;
-        OutOut << "Shape = " << Shape << " Location = " << Location << " Scale = " << Scale << endl;
+	OutIn << "Shape = " << Shape << " Location = " << Location << " Scale = " << Scale << endl;
+	OutOut << "Shape = " << Shape << " Location = " << Location << " Scale = " << Scale << endl;
 
-        OutIn.close();
-        OutOut.close();
-    Catch
+	OutIn.close();
+	OutOut.close();
+	return 0;
 }
 
 void WriteHeader(ofstream& Out, const TStr& GraphGenPars, const int& N, const int& NIter, const int& SF, bool IsIn){
@@ -511,10 +517,10 @@ void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKr
     TFile << "Initiator matrix before scaling for nodes and edges: " << endl;
     FitMtx.Dump(TFile);
 
-    FitMtx.SetForEdgesNoCut(G->GetNodes(), G->GetEdges());
+    //FitMtx.SetForEdgesNoCut(G->GetNodes(), G->GetEdges());
 
-    TFile << "Initiator matrix after scaling for nodes and edges: " << endl;
-    FitMtx.Dump(TFile);
+    //TFile << "Initiator matrix after scaling for nodes and edges: " << endl;
+    //FitMtx.Dump(TFile);
 
 }
 

@@ -8,7 +8,7 @@
 
 void GetSubGraph(int Size, int GenType, const PNGraph& G, vector<PNGraph>& SubGraphs, int& MaxDeg);
 void TestRealGraph(const vector<TStr>& CommandLineArgs);
-void MaxDegGen(const vector<TStr>& CommandLineArgs);
+int MaxDegGen(const vector<TStr>& CommandLineArgs);
 int GetMaxDeg(const PNGraph& G, bool IsIn);
 int GetMaxDeg(const PNGraph& G);
 void WriteHeader(ofstream& Out, const TStr& GraphGenPars, const int& N, const int& NIter, const int& SF, bool IsIn);

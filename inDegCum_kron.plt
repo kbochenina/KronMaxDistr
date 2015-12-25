@@ -10,4 +10,4 @@ set ylabel "Count"
 set tics scale 2
 #set terminal png size 1000,800
 #set output 'inDeg.Model.png'
-plot 	"inDeg.Model.tab" using 1:2 title "Model" with linespoints pt 6, "inDeg.Kron.tab" using 1:2 title "Kron" with linespoints pt 6,"inDeg.Kron_scaled.tab" using 1:2 title "KronScaled" with linespoints pt 6
+plot 	"inDegC.model.tab" using 1:2 title "Model" with linespoints pt 6, "inDegC.Kron.tab" using 1:2 title "Kron" with linespoints pt 6, "inDegC.Kron_scaled.tab" using 1:2 title "Kron_scaled" with linespoints pt 6

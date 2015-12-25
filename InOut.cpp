@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "InOut.h"
+#include "KronGen.h"
 
 int Error(const TStr& FuncName, const TStr& ErrorMsg){
     printf("Error in %s: %s\n", FuncName.CStr(), ErrorMsg.CStr());
@@ -75,9 +76,33 @@ void PlotPoints(const TFltPrV& in, const TFltPrV& out, const TStr& name, const T
 void PlotDegrees(const vector <TStr>& Parameters, const TFltPrV& In, const TFltPrV& Out, const TStr& Type){
     const TStr& Name = Parameters[NAME];
     const TStr& Plt = Parameters[PLT];
-   
     PlotPoints(In, Out, Type + Name, Plt);
    
+}
+
+
+
+void PlotDeg( const PNGraph& G, const TStr& Type, const TStr& Plt )
+{
+	TFltPrV MDegIn, MDegOut;
+	TSnap::GetInDegCnt(G, MDegIn);
+	TSnap::GetOutDegCnt(G, MDegOut);
+	PlotPoints(MDegIn, MDegOut, Type, Plt);
+}
+
+int PlotDegKron( const CmdArgs& Args, const TKronMtx& FitMtx, const TStr& Type)
+{
+	vector<TStr> CommandLineArgs;
+	Args.GetArgsArray(CommandLineArgs);
+
+	TStr KronGenLine;
+	if (Args.GetLine(KRONGEN, KronGenLine) == -1) 
+		return -1;
+
+	TFltPrV KronDegAvgIn, KronDegAvgOut;
+	GenKron(KronGenLine, FitMtx, KronDegAvgIn, KronDegAvgOut);
+	PlotPoints(KronDegAvgIn, KronDegAvgOut, Type, Args.GetPlt());
+	return 0;
 }
 
 void PrintMtx(const TKronMtx& FitMtxM, ofstream& TFile){

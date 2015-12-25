@@ -27,6 +27,7 @@ const enum ARGS { KRONTEST = 0, GRAPHGEN = 1, MTXGEN = 2, KRONFIT = 3, KRONGEN =
 #include <map>
 #include <tuple>
 #include <iostream>
+#include "CmdArgs.h"
 
 using namespace std;
 

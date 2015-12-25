@@ -244,7 +244,7 @@ int GetModel(const TStr& Args, PNGraph& G){
 	TSnap::PlotClustCf(ConfD,"conf");*/
 }
 
-void GenKron(const TStr& Args, TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV& KronDegAvgOut){
+void GenKron(const TStr& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV& KronDegAvgOut){
 	Env = TEnv(Args, TNotify::NullNotify);
 	TExeTm ExecTime;
 	// number of Kronecker graphs to generate
@@ -264,7 +264,7 @@ void GenKron(const TStr& Args, TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV&
 
 	for (int i = 0; i < NKron; i++){
 		ExecTime.Tick();
-      PNGraph Kron = TKronMtx::GenFastKronecker(FitMtx, NIter, Dir, 0);
+		PNGraph Kron = TKronMtx::GenFastKronecker(FitMtx, NIter, Dir, 0);
 		Sec += ExecTime.GetSecs();
 		printf("Calculating maximum degree...\n");
 		int MaxOutDeg = GetMaxMinDeg(Kron, IsDir, "false", "true"), MaxInDeg = GetMaxMinDeg(Kron, IsDir, "true", "true");

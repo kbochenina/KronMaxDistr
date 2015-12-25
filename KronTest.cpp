@@ -37,7 +37,8 @@ int _tmain(int argc, _TCHAR* argv[])
     // if (MaxDegGen(commandLineArgs) == -1)
 	//		return -1; 
     //TestRealGraph(commandLineArgs);
-	if (GetModelInitMtx(commandLineArgs) == -1){
+	CmdArgs Args(commandLineArgs);
+	if (TestLL(Args) == -1){
 		TFile.close();
 		return -1;
 	}

@@ -53,6 +53,13 @@ TStr CmdArgs::GetPlt() const
 	return Plt;
 }
 
+int CmdArgs::GetGDRuns() const
+{
+	Env = TEnv(CommandLineArgs[TESTGRAPH], TNotify::NullNotify);
+	int GDSteps = Env.GetIfArgPrefixInt("-gdruns:", 1, "Runs of gradient descent procedure");
+	return GDSteps;
+}
+
 CmdArgs::CmdArgs( const std::vector<TStr>& CLA )
 {
 	for (size_t i = 0; i < CLA.size(); ++i){

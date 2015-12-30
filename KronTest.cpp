@@ -40,6 +40,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	TRnd Rnd;
 	Rnd.PutSeed((unsigned)time(NULL));
 	TestLL Test(Args, Rnd);
+	if (Test.TestSamples() == -1){
+		TFile.close();
+		return -1;
+	}
 	//if (TestScaledMtx(Args) == -1){
 	//	TFile.close();
 	//	return -1;

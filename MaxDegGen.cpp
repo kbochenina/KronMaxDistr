@@ -66,7 +66,16 @@ int GevMaxDegFromGEVTrunc( double Scale, double Location, double Shape, double M
 	return Deg;
 }
 
-void GetRndDegSeq(const PNGraph& G, int Size, TRnd& Rnd, TIntV& NIdV){
+void GetRndDegSeq(const PNGraph& G, int Size, TRnd& Rnd, TIntV& DegV){
+	TIntV NIdV;
+	GetRndNIdV(G, Size, Rnd, NIdV);
+	for (int i = 0; i < Size; ++i){
+		int Deg = G->GetNI(NIdV[i]).GetDeg();
+		DegV.Add(Deg);
+	}
+}
+
+void GetRndNIdV(const PNGraph& G, int Size, TRnd& Rnd, TIntV& NIdV){
 	NIdV.Clr();
 	G->GetNIdV(NIdV);
 	NIdV.Shuffle(Rnd);
@@ -76,7 +85,7 @@ void GetRndDegSeq(const PNGraph& G, int Size, TRnd& Rnd, TIntV& NIdV){
 void GetRndSubGraph(const PNGraph &G, int Size, PNGraph& SubGraph, TRnd& Rnd){
 	SubGraph = TNGraph::New();
 	TIntV NIdV;
-	GetRndDegSeq(G, Size, Rnd, NIdV);
+	GetRndNIdV(G, Size, Rnd, NIdV);
 	for (int i = 0; i < Size; ++i)
 		SubGraph->AddNode(NIdV[i]);
 	for (TNGraph::TEdgeI EI = G->BegEI(); EI != G->EndEI(); EI++){
@@ -509,7 +518,7 @@ void ReadGevParams(ifstream& Gev, double& Shape, double& Location, double& Scale
 }
 
 
-void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKronMtx& FitMtx, bool SavePerm )
+void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKronMtx& FitMtx, double& LL, bool SavePerm )
 {
     Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
     TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
@@ -519,7 +528,7 @@ void EstimateInitMtx( const vector<TStr>& CommandLineArgs, const PNGraph& G, TKr
 
     if (!GetMtx(CommandLineArgs[MTXGEN], FitMtx)){
 		TExeTm execTime;
-		InitKronecker(CommandLineArgs[KRONFIT], G, FitMtx, SavePerm);
+		InitKronecker(CommandLineArgs[KRONFIT], G, FitMtx, LL, SavePerm);
 		TFile << "Time of creation of init matrix: " <<  execTime.GetTmStr() << endl;
 	}
 

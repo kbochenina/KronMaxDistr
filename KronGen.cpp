@@ -98,7 +98,7 @@ int BasicGraphGen(const TStr args, PNGraph &GD){
 }
 
 
-int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, bool SavePerm){
+int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, double& LL, bool SavePerm){
 	Env = TEnv(args, TNotify::StdNotify);
 	Env.PrepArgs(TStr::Fmt("Kronecker graphs. build: %s, %s. Time: %s", __TIME__, __DATE__, TExeTm::GetCurTm()));
 	TExeTm ExeTm;
@@ -138,6 +138,7 @@ int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, bool Sav
 	//if (GradType == 1) {
 	LogLike = KronLL.GradDescent(GradIter, LrnRate, MnStep, MxStep, WarmUp, NSamples, SavePerm);
 	TFile << "InitKronecker LL: " << LogLike << endl;
+	LL = LogLike;
 	//} else if (GradType == 2) {
 	//  LogLike = KronLL.GradDescent2(GradIter, LrnRate, MnStep, MxStep, WarmUp, NSamples); }
 	//else{ Fail; }

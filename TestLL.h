@@ -1,6 +1,6 @@
 class TestLL{
 	CmdArgs Args;
-	const TRnd& Rnd;
+	TRnd& Rnd;
 	vector <TStr> CommandLineArgs;
 	PNGraph G;
 	int ErrCode;
@@ -8,7 +8,7 @@ class TestLL{
 	void GetLogLike(const PNGraph& G, const TKronMtx& FitMtx, const double Nsp = 1.0);
 
 public:
-	TestLL(const CmdArgs& A, const TRnd& R);
+	TestLL(const CmdArgs& A, TRnd& R);
 	// test log-likelihood for scaled init matrix
 	int TestScaledMtx();
 	// test the quality of approximation using different sizes of samples

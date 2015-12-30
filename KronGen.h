@@ -1,3 +1,6 @@
+
+static double DEFLL = 0;
+
 // generates Kronecker model using sample of network
 int KroneckerBySample(vector<TStr> commandLineArgs);
 // generates graph using arguments from Args
@@ -9,5 +12,5 @@ void GenNewMtx(const PNGraph& model, const TStr& args, TKronMtx& FitMtx);
 int GetNIter(const int Size);
 int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt);
 // generate new initiator matrix
-int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, bool SavePerm = false);
+int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, double& LL = DEFLL, bool SavePerm = false);
 void GenKron(const TStr& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV& KronDegAvgOut);

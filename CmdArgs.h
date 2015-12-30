@@ -12,4 +12,5 @@ public:
 	int GetMinSize() const;
 	int GetSF() const;
 	TStr GetPlt() const;
+	int GetGDRuns() const;
 };

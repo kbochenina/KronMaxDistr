@@ -32,6 +32,20 @@ void CmdArgs::GetArgsArray( std::vector<TStr>& CLA ) const
 	}
 }
 
+int CmdArgs::GetMinSize() const
+{
+	Env = TEnv(CommandLineArgs[TESTGRAPH], TNotify::NullNotify);
+	int MinSize = Env.GetIfArgPrefixInt("-minsize:", 128, "Minimum sample size");
+	return MinSize;
+}
+
+int CmdArgs::GetSF() const
+{
+	Env = TEnv(CommandLineArgs[TESTGRAPH], TNotify::NullNotify);
+	int SF = Env.GetIfArgPrefixInt("-sf:", 2, "Scaling factor");
+	return SF;
+}
+
 TStr CmdArgs::GetPlt() const
 {
 	Env = TEnv(CommandLineArgs[KRONTEST], TNotify::NullNotify);

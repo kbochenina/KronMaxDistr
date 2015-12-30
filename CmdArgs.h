@@ -9,5 +9,7 @@ public:
 	TStr IsDirStr() const;
 	int GetLine(const int Index, TStr& Line) const;
 	void GetArgsArray(std::vector<TStr>& Args) const;
+	int GetMinSize() const;
+	int GetSF() const;
 	TStr GetPlt() const;
 };

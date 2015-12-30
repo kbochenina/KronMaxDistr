@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <ctime>
 
+void GetRndDegSeq(const PNGraph& G, int Size, TRnd& Rnd, TIntV& NIdV);
 void GetSubGraph(int Size, int GenType, const PNGraph& G, vector<PNGraph>& SubGraphs, int& MaxDeg);
 void TestRealGraph(const vector<TStr>& CommandLineArgs);
 int MaxDegGen(const vector<TStr>& CommandLineArgs);

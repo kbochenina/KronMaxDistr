@@ -66,12 +66,17 @@ int GevMaxDegFromGEVTrunc( double Scale, double Location, double Shape, double M
 	return Deg;
 }
 
-void GetRndSubGraph(const PNGraph &G, int Size, PNGraph& SubGraph, TRnd& Rnd){
-	SubGraph = TNGraph::New();
-	TIntV NIdV;
+void GetRndDegSeq(const PNGraph& G, int Size, TRnd& Rnd, TIntV& NIdV){
+	NIdV.Clr();
 	G->GetNIdV(NIdV);
 	NIdV.Shuffle(Rnd);
 	NIdV.Del(Size, NIdV.Len()-1);
+}
+
+void GetRndSubGraph(const PNGraph &G, int Size, PNGraph& SubGraph, TRnd& Rnd){
+	SubGraph = TNGraph::New();
+	TIntV NIdV;
+	GetRndDegSeq(G, Size, Rnd, NIdV);
 	for (int i = 0; i < Size; ++i)
 		SubGraph->AddNode(NIdV[i]);
 	for (TNGraph::TEdgeI EI = G->BegEI(); EI != G->EndEI(); EI++){

@@ -12,7 +12,6 @@ ofstream TFile;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	boost::mt19937 g;
     Env = TEnv(argc, argv, TNotify::StdNotify);
 	Env.PrepArgs(TStr::Fmt("KronTest. build: %s, %s. Time: %s", __TIME__, __DATE__, TExeTm::GetCurTm()));
     const TStr SettingsFNm = Env.GetIfArgPrefixStr("-s:", "parameters.txt", "Settings filename");
@@ -38,10 +37,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	//		return -1; 
     //TestRealGraph(commandLineArgs);
 	CmdArgs Args(commandLineArgs);
-	if (TestLL(Args) == -1){
-		TFile.close();
-		return -1;
-	}
+	TRnd Rnd;
+	Rnd.PutSeed((unsigned)time(NULL));
+	TestLL Test(Args, Rnd);
+	//if (TestScaledMtx(Args) == -1){
+	//	TFile.close();
+	//	return -1;
+	//}
     return 0;
 }
 

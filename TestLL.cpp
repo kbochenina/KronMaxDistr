@@ -4,26 +4,19 @@
 #include "KronGen.h"
 #include "Scale.h"
 
-
+TestLL::TestLL(const CmdArgs& A, const TRnd& R): Args(A), Rnd(R) {
+	Args.GetArgsArray(CommandLineArgs);
+	TStr GraphGenLine;
+	
+	ErrCode = Args.GetLine(GRAPHGEN, GraphGenLine);
+	ErrCode = GetModel(GraphGenLine, G);
+	PlotDeg(G, "model", Args.GetPlt());
+}
 
 // estimate model init matrix
-int TestLL( const CmdArgs& Args )
+int TestLL::TestScaledMtx()
 {
-	PNGraph G;
-
-	vector<TStr> CommandLineArgs;
-	Args.GetArgsArray(CommandLineArgs);
-	
-	TStr GraphGenLine, KronGenLine;
-	if (Args.GetLine(GRAPHGEN, GraphGenLine) == -1
-		|| Args.GetLine(KRONGEN, KronGenLine) == -1) 
-		return -1;
-
-	if (GetModel(GraphGenLine, G) == -1)
-		return -1;
-
-	int Nodes = G->GetNodes();
-	PlotDeg(G, "model", Args.GetPlt());
+	if (ErrCode == -1) return -1;
 
 	TKronMtx FitMtx;
 	// estimate init matrix and save permutation to a file perm.dat
@@ -41,7 +34,8 @@ int TestLL( const CmdArgs& Args )
 	GetLogLike(G, FitMtx);
 	if (PlotDegKron(Args, FitMtx, "kron") == -1)
 		return -1;
-		
+	
+	int Nodes = G->GetNodes();
 	int NIter = GetNIter(Nodes);
 	int ErrCode = ScaleFitMtx(FitMtx, NIter, static_cast<int>(pow(2.00, NIter)), GetMaxDeg(G), Args.IsDirStr());
 	if (ErrCode == -1)
@@ -55,7 +49,7 @@ int TestLL( const CmdArgs& Args )
 }
 
 // get log likelihood for a given graph and a given matrix
-void GetLogLike( const PNGraph& G, const TKronMtx& FitMtx, const double Nsp )
+void TestLL::GetLogLike( const PNGraph& G, const TKronMtx& FitMtx, const double Nsp )
 {
 	TKroneckerLL KronLL(G, FitMtx, Nsp);
 	KronLL.InitLL(G, FitMtx);
@@ -69,4 +63,20 @@ void GetLogLike( const PNGraph& G, const TKronMtx& FitMtx, const double Nsp )
 	AvgLL = 0;
 	KronLL.SampleGradient(WarmUp, NSamples, AvgLL, GradV);
 	TFile << "TestLL SampleGradient log-likelihood: " << AvgLL << endl;
+}
+
+// test the quality of approximation using different sizes of samples
+// for each sample size N:
+// 1. N random nodes are chosen from degree sequence of graph G
+// 2. if Deg(Node) > N, Deg(Node) = N (excessive degrees are truncated)
+// 3. Graph G` is a configuration model built by N nodes
+// 4. Estimate Kronecker matrix on G`
+// 5. Scale Kronecker matrix to fit number of edges in G
+// 6. Reproduce graph G with the use of obtained initiator matrix
+int TestLL::TestSamples( )
+{
+	if (ErrCode == -1) return -1;
+	int MinSize = Args.GetMinSize();
+	int SF = Args.GetSF();
+	int Size = MinSize;
 }

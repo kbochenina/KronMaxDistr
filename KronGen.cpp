@@ -245,15 +245,14 @@ int GetModel(const TStr& Args, PNGraph& G){
 	TSnap::PlotClustCf(ConfD,"conf");*/
 }
 
-void GenKron(const TStr& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV& KronDegAvgOut){
-	Env = TEnv(Args, TNotify::NullNotify);
+void GenKron(const CmdArgs& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV& KronDegAvgOut){
 	TExeTm ExecTime;
 	// number of Kronecker graphs to generate
-	const TInt NKron = Env.GetIfArgPrefixInt("-n:", 1, "Number of generated Kronecker graphs");
+	const TInt NKron = Args.GetNKron();
 	// iterations of Kronecker product
-	const TInt NIter = Env.GetIfArgPrefixInt("-i:", 10, "Iterations of Kronecker product");
+	const TInt NIter = Args.GetNIter();
 	// is graph directed?
-	TStr IsDir = Env.GetIfArgPrefixStr("-isdir:", "false", "Produce directed graph (true, false)");
+	TStr IsDir = Args.IsDirStr();
 	
 	TFlt ExpectedNodes = FitMtx.GetNodes(NIter), ExpectedEdges = FitMtx.GetEdges(NIter);
 	
@@ -261,7 +260,7 @@ void GenKron(const TStr& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TF
 		
 	double Sec = 0.0;
 	int AvgMaxOutDeg = 0, AvgMaxInDeg = 0, MinMaxOutDeg = 0, MaxMaxOutDeg = 0, MinMaxInDeg = 0, MaxMaxInDeg = 0;
-   bool Dir = IsDir == "true" ? true : false;
+    bool Dir = IsDir == "true" ? true : false;
 
 	for (int i = 0; i < NKron; i++){
 		ExecTime.Tick();
@@ -297,6 +296,33 @@ void GenKron(const TStr& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TF
 
 
     
+
+void GenKron( const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDegIn, TVec<TFltPrV>& KronDegOut, int Seed )
+{
+	TExeTm ExecTime;
+	// number of Kronecker graphs to generate
+	const TInt NKron = Args.GetNKron();
+	// iterations of Kronecker product
+	const TInt NIter = Args.GetNIter();
+	// is graph directed?
+	bool Dir = Args.IsDir();
+	TFlt ExpectedNodes = FitMtx.GetNodes(NIter), ExpectedEdges = FitMtx.GetEdges(NIter);
+	TFile << "Kronecker nodes: " << ExpectedNodes << ", expected Kronecker edges: " << ExpectedEdges << endl;
+	double Sec = 0;
+	for (int i = 0; i < NKron; i++){
+		ExecTime.Tick();
+		PNGraph Kron = TKronMtx::GenFastKronecker(FitMtx, NIter, Dir, Seed);
+		Sec += ExecTime.GetSecs();
+		TFltPrV In, Out;
+		TSnap::GetInDegCnt(Kron, In);
+		TSnap::GetOutDegCnt(Kron, Out);
+		//printf("Nodes count: %d, nodes with non-zero degree %d, edges count %d\n max deg = %d\n", kron->GetNodes(), TSnap::CntNonZNodes(kron), kron->GetEdges(), MaxDeg);
+		KronDegIn.Add(In);
+		KronDegOut.Add(Out);
+	}
+	Sec /= NKron;
+	TFile << "Average time of generation of Kronecker product: " <<  Sec << endl;
+}
 
 int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt)
 {

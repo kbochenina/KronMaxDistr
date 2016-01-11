@@ -13,4 +13,6 @@ public:
 	int GetSF() const;
 	TStr GetPlt() const;
 	int GetGDRuns() const;
+	int GetNKron() const;
+	int GetNIter() const;
 };

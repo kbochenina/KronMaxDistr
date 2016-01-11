@@ -19,8 +19,9 @@ int TestLL::TestScaledMtx()
 	if (ErrCode == -1) return -1;
 
 	TKronMtx FitMtx;
+	double LL = 0;
 	// estimate init matrix and save permutation to a file perm.dat
-	EstimateInitMtx(CommandLineArgs, G, FitMtx, true);
+	EstimateInitMtx(CommandLineArgs, G, FitMtx, LL, true);
 	// get log likelihood for obtained init matrix
 	GetLogLike(G, FitMtx);
 	// scale for undirected if it is required
@@ -117,8 +118,12 @@ int TestLL::TestSamples( )
 		_itoa(Size, SizeStr, 10);
 		TStr NameTStr("kron_scaled"), SizeTStr(SizeStr);
 		NameTStr += SizeTStr;
-		if (PlotDegKron(Args, FitMtx, NameTStr) == -1)
-			return -1;
+		int Seed = Rnd.GetUniDevInt(INT_MIN, INT_MAX);
+		TVec<TFltPrV> KronDegIn, KronDegOut;
+		// generate NKron Kronecker graphs
+		GenKron(Args, FitMtx, KronDegIn, KronDegOut, Seed);
+		/*if (PlotDegKron(Args, FitMtx, NameTStr) == -1)
+			return -1;*/
 	}
 	return 0;
 }

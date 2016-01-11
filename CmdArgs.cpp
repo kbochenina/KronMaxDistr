@@ -60,6 +60,20 @@ int CmdArgs::GetGDRuns() const
 	return GDSteps;
 }
 
+int CmdArgs::GetNKron() const
+{
+	Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
+	int NKron = Env.GetIfArgPrefixInt("-n:", 1, "Number of generated Kronecker graphs");
+	return NKron;
+}
+
+int CmdArgs::GetNIter() const
+{
+	Env = TEnv(CommandLineArgs[KRONGEN], TNotify::NullNotify);
+	int NIter = Env.GetIfArgPrefixInt("-i:", 10, "Iterations of Kronecker product");
+	return NIter;
+}
+
 CmdArgs::CmdArgs( const std::vector<TStr>& CLA )
 {
 	for (size_t i = 0; i < CLA.size(); ++i){

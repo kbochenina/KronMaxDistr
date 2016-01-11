@@ -100,7 +100,7 @@ int PlotDegKron( const CmdArgs& Args, const TKronMtx& FitMtx, const TStr& Type)
 		return -1;
 
 	TFltPrV KronDegAvgIn, KronDegAvgOut;
-	GenKron(KronGenLine, FitMtx, KronDegAvgIn, KronDegAvgOut);
+	GenKron(Args, FitMtx, KronDegAvgIn, KronDegAvgOut);
 	PlotPoints(KronDegAvgIn, KronDegAvgOut, Type, Args.GetPlt());
 	return 0;
 }

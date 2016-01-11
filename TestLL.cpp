@@ -122,6 +122,7 @@ int TestLL::TestSamples( )
 		TVec<TFltPrV> KronDegIn, KronDegOut;
 		// generate NKron Kronecker graphs
 		GenKron(Args, FitMtx, KronDegIn, KronDegOut, Seed);
+		Get
 		/*if (PlotDegKron(Args, FitMtx, NameTStr) == -1)
 			return -1;*/
 	}

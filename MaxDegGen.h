@@ -4,8 +4,7 @@
 #include "Scale.h"
 #include <iomanip>
 #include <ctime>
-
-static double DEFLL = 0;
+#include "KronGen.h"
 
 void GetRndDegSeq(const PNGraph& G, int Size, TRnd& Rnd, TIntV& DegV);
 void GetRndNIdV(const PNGraph& G, int Size, TRnd& Rnd, TIntV& NIdV);

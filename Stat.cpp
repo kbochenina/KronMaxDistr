@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Stat.h"
+#include "InOut.h"
 
 int GetMaxMinDeg(const PNGraph& G, const TStr& IsDir, const TStr& IsIn, const TStr& IsMax){
     TIntPrV DegCnt;
@@ -58,7 +59,6 @@ void AddDegreeStat(const TFltPrV& current, TFltPrV& degrees){
 
 // get in or out degree count
 void GetDegCnt(const PNGraph& G, TFltPrV& Seq, bool IsIn){
-	TFltPrV Seq;
 	if (IsIn)
 		TSnap::GetInDegCnt(G, Seq);
 	else 
@@ -78,160 +78,3 @@ void GetAvgDegreeStat (TFltPrV& deg, const TInt& NKron){
         deg[i].Val2.Val /= NKron;
 }
 
-// we suppose that degrees in degree sequences are sorted in ascending order
-void DegSeq::CalcAvgDeg()
-{
-	TIntV Ind;
-	for (int i = 0; i < Deg.Len(); ++i)
-		Ind.Add(0);
-
-	int DegInd = -1;
-
-	// get cumulative values
-	for (int CurrDeg = MinDeg; CurrDeg <= MaxDeg; ++CurrDeg){
-		bool HasDeg = false;
-
-		for (int i = 0; i < Deg.Len(); ++i){
-			TFltPr Val = Deg[i][Ind[i]];
-			// degree
-			int D = static_cast<int>(Val.GetVal1());
-			if ( D == CurrDeg ){
-				// if this degree is for the first time
-				// add it to degree sequence
-				if (!HasDeg) {
-					HasDeg = true;
-					TFltPr Val(CurrDeg, 0);
-					AvgDeg.Add(Val);
-					++DegInd;
-				}
-				// increase count
-				AvgDeg[DegInd].Val2 += Val.Val2;
-				Ind[i] += 1;
-			}
-		}
-	}
-
-	// get average values
-	for (int i = 0; i < AvgDeg.Len(); ++i){
-		AvgDeg[i].Val2 /= AvgDeg.Len();
-	}
-}
-
-void DegSeq::CalcSD()
-{
-	// if AvgDeg was not calculated yet
-	if (AvgDeg.Len() == 0){
-		CalcAvgDeg();
-	}
-	TIntV Ind;
-	for (int i = 0; i < Deg.Len(); ++i)
-		Ind.Add(0);
-
-	int DegInd = -1;
-
-	// get cumulative values
-	for (int CurrDeg = MinDeg; CurrDeg <= MaxDeg; ++CurrDeg){
-		bool HasDeg = false;
-
-		for (int i = 0; i < Deg.Len(); ++i){
-			TFltPr Val = Deg[i][Ind[i]];
-			// degree
-			int D = static_cast<int>(Val.GetVal1());
-			if ( D == CurrDeg ){
-				// if this degree is for the first time
-				// add it to degree sequence
-				if (!HasDeg) {
-					HasDeg = true;
-					TFltPr Val(CurrDeg, 0);
-					SD.Add(Val);
-					++DegInd;
-				}
-				// increase sum
-				SD[DegInd].Val2 += pow(Val.Val2 - AvgDeg[DegInd].Val2, 2.00);
-				// calculate standard deviation
-				if (i == Deg.Len() - 1){
-					SD[DegInd].Val2 /= Deg.Len();
-					SD[DegInd].Val2 = sqrt(SD[DegInd].Val2);
-				}
-				Ind[i] += 1;
-			}
-		}
-	}
-}
-
-DegSeq::DegSeq( const TVec<TFltPrV>& Val )
-{
-	int MinDeg = INT_MAX, MaxDeg = 0;
-	for (int i = 0; i <  Val.Len(); ++i){
-		TFltPrV Row;
-		for (int j = 0; j <  Val[i].Len(); ++j){
-			TFltPr Pr = Val[i][j];
-			Row.Add(Pr);
-			// for the first element in the sequence
-			if (j == 0){
-				if (Pr.Val1 < MinDeg)
-					MinDeg = Pr.Val1;
-			}
-			// for the last element in the sequence
-			if (j == Val[i].Len() - 1){
-				if (Pr.Val1 > MaxDeg)
-					MaxDeg = Pr.Val1;
-			}
-		}
-		Deg.Add(Row);
-	}
-}
-
-void DegSeq::GetAvgDegSeq( TFltPrV& AvgDegSeq )
-{
-	// if AvgDeg was not calculated yet
-	if (AvgDeg.Len() == 0){
-		CalcAvgDeg();
-	}
-	if (AvgDegSeq.Len() != 0)
-		AvgDegSeq.Clr();
-	// copy to output
-	for (int i = 0; i < AvgDeg.Len(); ++i)
-		AvgDegSeq.Add(AvgDeg[i]);
-}
-
-void DegSeq::GetMinErrBar( TFltPrV& MinErr )
-{
-	// if SD was not calculated yet
-	if (SD.Len() == 0){
-		CalcSD();
-	}
-	if (MinErr.Len() != 0)
-		MinErr.Clr();
-	
-	if (MinErrBar.Len() == 0){
-		for (int i = 0; i < AvgDeg.Len(); ++i){
-			TFltPr Val(AvgDeg[i].Val1, AvgDeg[i].Val2 - SD[i].Val2);
-			MinErrBar.Add(Val);
-		}
-	}
-	// copy to output
-	for (int i = 0; i < MinErrBar.Len; ++i)
-		MinErr.Add(MinErrBar[i]);
-}
-
-void DegSeq::GetMaxErrBar( TFltPrV& MaxErr )
-{
-	// if SD was not calculated yet
-	if (SD.Len() == 0){
-		CalcSD();
-	}
-	if (MaxErr.Len() != 0)
-		MaxErr.Clr();
-
-	if (MaxErrBar.Len() == 0){
-		for (int i = 0; i < AvgDeg.Len(); ++i){
-			TFltPr Val(AvgDeg[i].Val1, AvgDeg[i].Val2 + SD[i].Val2);
-			MaxErrBar.Add(Val);
-		}
-	}
-
-	// copy to output
-	for (int i = 0; i < MaxErrBar.Len; ++i)
-		MaxErr.Add(MaxErrBar[i]);
-}

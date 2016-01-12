@@ -1,3 +1,8 @@
+#ifndef INOUT_H
+#define INOUT_H
+
+#include "DegSeq.h"
+#include <iomanip>
 
 int Error(const TStr& FuncName, const TStr& ErrorMsg);
 int ReadParameters(TStr settingsFN, vector<TStr>& out);
@@ -22,4 +27,9 @@ void AddPrefix(const char* Pref, const char * Sep, const char* S, TStr& Res);
 void PrintIntV(const vector<int>& V, ofstream& Out);
 // check file for existence
 bool CheckFile(const TStr FName);
+// save average degrees with error bars
+bool SaveDegErrBars(DegSeq& Seq, const TStr& NameTStr, bool IsIn);
+
+#endif
+
 

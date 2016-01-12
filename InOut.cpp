@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "InOut.h"
 #include "KronGen.h"
+#include "Stat.h"
+#include "DegSeq.h"
 
 int Error(const TStr& FuncName, const TStr& ErrorMsg){
     printf("Error in %s: %s\n", FuncName.CStr(), ErrorMsg.CStr());
@@ -182,6 +184,32 @@ bool CheckFile( const TStr FName )
 	ifstream f(FName.CStr(), ios::in);
 	if (!f)
 		return false;
+	return true;
+}
+
+bool SaveDegErrBars( DegSeq& Seq, const TStr& NameTStr, bool IsIn )
+{
+	TFltPrV AvgDeg, MinErr, MaxErr;
+	Seq.GetAvgDegSeq(AvgDeg);
+	Seq.GetMinErrBar(MinErr);
+	Seq.GetMaxErrBar(MaxErr);
+	//PrintTFltPrV(AvgDeg);
+	//PrintTFltPrV(MinErr);
+	//PrintTFltPrV(MaxErr);
+	if (Seq.CheckDeg() == false)
+		return false;
+
+	ofstream F(NameTStr.CStr());
+	if (!F)
+		return false;
+	F << "#" << endl;
+	F << "#" << NameTStr.CStr() << endl; 
+	F << "#" << endl;
+	F << "#" << std::setw(10) << left << (IsIn ? "In" : "Out") << "-degree" << std::setw(10) << left << "AvgCount" << std::setw(10) << left << 
+		"MinErrBar" << std::setw(10) << left << "MaxErrBar" << endl;
+	for (int i = 0; i < AvgDeg.Len(); ++i){
+		F << std::setw(10) << left << AvgDeg[i].Val1 << std::setw(10) << left  << AvgDeg[i].Val2 << std::setw(10) << left << MinErr[i].Val2 << std::setw(10) << left << MaxErr[i].Val2 << endl;
+	}
 	return true;
 }
 

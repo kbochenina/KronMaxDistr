@@ -297,7 +297,7 @@ void GenKron(const CmdArgs& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn,
 
     
 
-void GenKron( const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDegIn, TVec<TFltPrV>& KronDegOut, int Seed )
+void GenKron( const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDegIn, TVec<TFltPrV>& KronDegOut, TRnd& Rnd )
 {
 	TExeTm ExecTime;
 	// number of Kronecker graphs to generate
@@ -311,7 +311,7 @@ void GenKron( const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDe
 	double Sec = 0;
 	for (int i = 0; i < NKron; i++){
 		ExecTime.Tick();
-		PNGraph Kron = TKronMtx::GenFastKronecker(FitMtx, NIter, Dir, Seed);
+		PNGraph Kron = TKronMtx::GenFastKronecker(FitMtx, NIter, Dir, Rnd.GetUniDevInt(INT_MIN, INT_MAX));
 		Sec += ExecTime.GetSecs();
 		TFltPrV In, Out;
 		TSnap::GetInDegCnt(Kron, In);
@@ -324,7 +324,9 @@ void GenKron( const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDe
 	TFile << "Average time of generation of Kronecker product: " <<  Sec << endl;
 }
 
-int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&ModelPlt)
+
+
+int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr& ModelPlt)
 {
     PNGraph G;
     size_t PSize = Parameters.size();
@@ -368,8 +370,8 @@ int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&
         // in and out average degrees of Kronecker graphs
         TFltPrV KronDegAvgIn, KronDegAvgOut;
 
-       
-        GenKron(Parameters[KRONGEN], FitMtxM, KronDegAvgIn, KronDegAvgOut);
+		CmdArgs Args(Parameters);
+        GenKron(Args, FitMtxM, KronDegAvgIn, KronDegAvgOut);
 
         PlotDegrees(Parameters, KronDegAvgIn, KronDegAvgOut, "kron");
 

@@ -3,6 +3,7 @@
 #include "MaxDegGen.h"
 #include "KronGen.h"
 #include "Scale.h"
+#include "Stat.h"
 
 TestLL::TestLL(const CmdArgs& A, TRnd& R): Args(A), Rnd(R) {
 	Args.GetArgsArray(CommandLineArgs);
@@ -86,9 +87,9 @@ int TestLL::TestSamples( )
 	// estimate "true" FitMtx
 	TKronMtx FitMtx;
 	// estimate init matrix
-	EstimateInitMtx(CommandLineArgs, G, FitMtx);
-	// and get log-likelihood
-	GetLogLike(G, FitMtx);
+	//EstimateInitMtx(CommandLineArgs, G, FitMtx);
+	//// and get log-likelihood
+	//GetLogLike(G, FitMtx);
 
 	// for each sample size N:
 	for (; Size <= N; Size *= SF){
@@ -118,11 +119,15 @@ int TestLL::TestSamples( )
 		_itoa(Size, SizeStr, 10);
 		TStr NameTStr("kron_scaled"), SizeTStr(SizeStr);
 		NameTStr += SizeTStr;
-		int Seed = Rnd.GetUniDevInt(INT_MIN, INT_MAX);
+		NameTStr += ".tab";
+
 		TVec<TFltPrV> KronDegIn, KronDegOut;
 		// generate NKron Kronecker graphs
-		GenKron(Args, FitMtx, KronDegIn, KronDegOut, Seed);
-		Get
+		GenKron(Args, FitMtx, KronDegIn, KronDegOut, Rnd);
+		DegSeq Seq(KronDegOut);
+		if (SaveDegErrBars( Seq, NameTStr, false ) != true)
+			return -1;
+
 		/*if (PlotDegKron(Args, FitMtx, NameTStr) == -1)
 			return -1;*/
 	}

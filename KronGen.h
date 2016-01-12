@@ -1,4 +1,7 @@
 
+#ifndef KRONGEN_H
+#define KRONGEN_H
+
 static double DEFLL = 0;
 
 // generates Kronecker model using sample of network
@@ -15,4 +18,6 @@ int GetGraphs(const vector <TStr>& Parameters, const TStr& ModelGen, const TStr&
 int InitKronecker(const TStr args, const PNGraph &GD, TKronMtx& FitMtx, double& LL = DEFLL, bool SavePerm = false);
 void GenKron(const CmdArgs& Args, const TKronMtx& FitMtx, TFltPrV& KronDegAvgIn, TFltPrV& KronDegAvgOut);
 // the overload of GenKron returning array of degree sequences for NKron graphs
-void GenKron(const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDegIn, TVec<TFltPrV>& KronDegOut, int Seed);
+void GenKron(const CmdArgs& Args, const TKronMtx& FitMtx, TVec<TFltPrV>& KronDegIn, TVec<TFltPrV>& KronDegOut, TRnd& Rnd );
+
+#endif
